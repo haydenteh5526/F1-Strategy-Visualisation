@@ -19,4 +19,4 @@ Branch protection enforces an eligible approval count, not a particular person's
 
 For processing changes, reproduce the snapshot run and tests, and check retention, exclusions and provenance. For charts, compare values with prepared data and check units, labels and interpretation. For narrative, verify claims against evidence. Everyone must understand the complete project.
 
-Describe purpose, changes and validation in the PR. Record significant AI decisions and human checks. Do not commit student IDs, credentials, environments or raw download caches.
+Describe purpose, changes and validation in the PR. Record significant project decisions and verification. Do not commit student IDs, credentials, environments or raw download caches.
