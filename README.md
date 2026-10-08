@@ -1,47 +1,68 @@
 # F1 Strategy Visualisation
 
-A group data visualisation project investigating Formula 1 race pace, tyre stints and pit-stop timing for fans who want to understand how a race develops.
+A group data visualisation project for F1 fans, initially studying the 2026 Austrian Grand Prix at the Red Bull Ring. We compare both drivers from Red Bull Racing, Mercedes and Ferrari.
 
 ## Current status
 
-This repository is the starting point for the group's original analysis, charts and documentation. The proposed scope is one completed Grand Prix, with a second race added only if feasible. The group still needs to confirm the race, audience and research questions. No race data has been analysed and no findings have been established.
+The audience brief, data audit and preparation pipeline are on this branch. We retain all 426 selected laps and mark 361 as eligible for initial normal-racing pace comparisons. No final performance findings have been established.
 
-## Proposed questions
+## Research questions
 
-- How does lap-time consistency differ between selected drivers?
-- How does lap time change as tyres age within a stint?
-- What happens to relative gaps and positions around pit stops?
-- How do Safety Car periods affect comparisons of race pace?
+- How do lap times and pace consistency differ during comparable normal racing conditions?
+- How does lap time vary with tyre age within stints and compounds?
+- How do lap-boundary intervals and positions change around pit stops?
+- How do Virtual Safety Car periods affect interpretation?
 
-These questions are provisional. Lap time also reflects fuel load, traffic and conditions, so changes in lap time alone do not establish tyre degradation or the causal effect of a strategy.
+Fuel load, traffic and conditions also affect lap times. The data cannot isolate causal tyre degradation or prove an optimal strategy.
 
-## Local setup
+## Setup and reproduction
 
-Python 3.11 or later is required. The dependency versions below match the installed environment used during setup.
-
-The existing local environment is `C:\venv\f1-race-replay`. Check it from PowerShell with:
-
-```powershell
-& "C:\venv\f1-race-replay\Scripts\python.exe" -m pip check
-```
-
-Teammates can create their own environment:
+Use Python 3.11 or later:
 
 ```powershell
 py -3.11 -m venv .venv
 & ".\.venv\Scripts\python.exe" -m pip install -r requirements.txt
+& ".\.venv\Scripts\python.exe" scripts\prepare_race.py
+& ".\.venv\Scripts\python.exe" -m unittest discover -s tests -v
 ```
 
-There is no analysis script to run yet. The next step is to confirm a Grand Prix and audit its available lap data.
+Hayden can substitute `C:\venv\f1-race-replay\Scripts\python.exe`. The first download requires internet access. The current snapshot was retrieved on 8 October 2026.
 
-## Data and reproducibility
+After downloading, reprocess offline:
 
-Planned data access is through [FastF1](https://github.com/theOehrly/Fast-F1). Record the event, session, source, access date, missing values and transformations alongside the analysis. Retain raw data separately from prepared data, document exclusion rules and keep race events identifiable when comparing normal racing pace.
+```powershell
+& ".\.venv\Scripts\python.exe" scripts\prepare_race.py --from-snapshot
+```
 
-## Reference project
+Tests use the local raw snapshot; without it, the snapshot-dependent tests are skipped. Run the download first.
 
-[F1 Race Replay by Tom Shaw and contributors](https://github.com/IAmTomShaw/f1-race-replay) is the reference for interactive replay ideas. Its local clone is in the sibling `f1-race-replay` folder. No reference source code has been copied into this repository. Attribute any code or design adapted later and preserve applicable licence notices.
+## Data and documentation
 
-## Group work and AI use
+Raw laps, weather, results, race-control messages and track-status events remain locally in ignored `data/raw/austria-2026/`. Download caches are also ignored.
 
-Assign both primary responsibilities and secondary review responsibilities. All members should understand the data, methods, charts and conclusions. Keep an AI decision log recording meaningful suggestions, how they were verified and why the group accepted, modified or rejected them.
+Prepared files in `data/processed/austria-2026/`:
+
+| File | Purpose |
+| --- | --- |
+| selected_laps.csv | All 426 selected laps, explicit units, flags and eligibility |
+| pace_laps.csv | 361 initial normal-racing pace laps |
+| flagged_laps.csv | 55 FastF1 accuracy-flagged laps retained for review |
+| pit_visits.csv | 14 paired entry/exit records; elapsed pit-lane time, not stationary stop time |
+| stints.csv | Driver-level stint boundaries, compounds and eligible-lap counts |
+| audit_summary.json | Coverage, validation, source versions, provenance and raw-laps hash |
+
+`GapToEarliestLapCompletionSeconds` compares timestamps for the same lap number against the earliest full-field completion. It is not an instantaneous/live gap. Investigate the full-field alignment warning for driver 77 before using field-reference gaps in final charts.
+
+No missing values are imputed or slow laps automatically removed. Every selected source lap is retained. Columns ending in `Seconds` distinguish durations (LapTimeSeconds) from session-relative timestamps (TimeSeconds). Further comparisons need attention to stint phase, compound, traffic and fuel load.
+
+See `docs/audience-brief/` and `docs/data-audit/`. Public documents omit student IDs. Keep identification details in coursework submission copies.
+
+## Team workflow
+
+Hayden is Head Developer, Roy Second Developer and Sebastian/Tan Shyi Sheng Third Developer. Hayden reviews Sebastian; Roy reviews Hayden; Sebastian reviews Roy. Use feature branches and approved PRs; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Sources
+
+- [FastF1 core documentation](https://docs.fastf1.dev/core.html)
+- [Official Austrian GP 2026 result](https://www.formula1.com/en/results/2026/races/1288/austria/race-result)
+- [F1 Race Replay](https://github.com/IAmTomShaw/f1-race-replay) as a presentation reference. No reference code has been copied. Attribute future adaptations and retain applicable licence notices.
