@@ -89,4 +89,3 @@ Repository: https://github.com/haydenteh5526/F1-Strategy-Visualisation
 FastF1: https://docs.fastf1.dev/core.html
 
 Official result: https://www.formula1.com/en/results/2026/races/1288/austria/race-result
-

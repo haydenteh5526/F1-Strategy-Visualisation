@@ -23,4 +23,3 @@ We plan for a laptop or desktop view and a projected group presentation. Viewers
 ## Audience feedback plan
 
 After initial charts, ask teammates and F1 fans what each view shows, what a gap means and what they would conclude. Record confusing terms and unsupported interpretations, then revise the design. No audience testing has been completed yet.
-
