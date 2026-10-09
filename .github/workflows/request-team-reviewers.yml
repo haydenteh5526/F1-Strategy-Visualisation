@@ -1,0 +1,40 @@
+name: Request team reviewers
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review, synchronize]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  request-reviewers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request the other two team members
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const members = ['haydenteh5526', 'Roy-Cheong', 'shyishengtan009-cmd'];
+            const pr = context.payload.pull_request;
+            const author = pr.user.login.toLowerCase();
+            if (!members.some(member => member.toLowerCase() === author)) {
+              core.info('The author is outside the configured project team.');
+              return;
+            }
+            const alreadyRequested = new Set(
+              (pr.requested_reviewers || []).map(reviewer => reviewer.login.toLowerCase())
+            );
+            const reviewers = members.filter(member =>
+              member.toLowerCase() !== author && !alreadyRequested.has(member.toLowerCase())
+            );
+            if (reviewers.length === 0) {
+              core.info('Both other team members are already requested.');
+              return;
+            }
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              reviewers
+            });
