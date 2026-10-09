@@ -26,7 +26,7 @@ py -3.11 -m venv .venv
 & ".\.venv\Scripts\python.exe" -m unittest discover -s tests -v
 ```
 
-Hayden can substitute `C:\venv\f1-race-replay\Scripts\python.exe`. The first download requires internet access. The current snapshot was retrieved on 8 October 2026.
+Hayden can substitute `C:\venv\f1-race-replay\Scripts\python.exe`. The first download requires internet access. The retrieval date is recorded in audit_summary.json.
 
 After downloading, reprocess offline:
 

@@ -1,6 +1,6 @@
 # F1 Strategy Visualisation
 
-Group Data Visualisation Project    Audience and Stakeholder Brief    8 October 2026
+Group Data Visualisation Project    Audience and Stakeholder Brief
 
 We are designing a visual explanation of the 2026 Austrian Grand Prix for F1 fans. The initial comparison covers both drivers from Red Bull Racing, Mercedes and Ferrari. Viewers should interpret pace, tyre choices and pit-stop timing from evidence rather than infer strategy solely from finishing positions.
 

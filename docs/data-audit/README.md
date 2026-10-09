@@ -1,12 +1,12 @@
 # F1 Strategy Visualisation
 
-Group Data Visualisation Project    Data Audit    8 October 2026
+Group Data Visualisation Project    Data Audit
 
-We audited FastF1 data for the 2026 Austrian Grand Prix at the Red Bull Ring on 28 June. The comparison contains 426 driver laps with complete core timing and tyre fields. We retain every selected record and mark 361 laps as eligible for initial normal-racing pace analysis. This audit records preparation decisions, not final performance findings.
+We audited FastF1 data for the 2026 Austrian Grand Prix at the Red Bull Ring. The comparison contains 426 driver laps with complete core timing and tyre fields. We retain every selected record and mark 361 laps as eligible for initial normal-racing pace analysis. This audit records preparation decisions, not final performance findings.
 
 ## Source and provenance
 
-Data were accessed on 8 October 2026 using FastF1 3.8.3 and pandas 2.3.3. The raw download contains 1,339 field laps, results, weather, track status and race-control messages. Telemetry was not downloaded. Raw files remain locally; prepared files and the script are shared in the repository. A SHA-256 hash identifies the raw lap snapshot.
+Data were accessed using FastF1 3.8.3 and pandas 2.3.3. The raw download contains 1,339 field laps, results, weather, track status and race-control messages. Telemetry was not downloaded. Raw files remain locally; prepared files and the script are shared in the repository. A SHA-256 hash identifies the raw lap snapshot.
 
 ## Selected drivers and coverage
 
