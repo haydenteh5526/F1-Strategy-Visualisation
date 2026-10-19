@@ -12,6 +12,7 @@ __pycache__/
 # Download caches and replay-generated data
 .fastf1-cache/
 computed_data/
+data/raw/
 
 # Local configuration and credentials
 .env

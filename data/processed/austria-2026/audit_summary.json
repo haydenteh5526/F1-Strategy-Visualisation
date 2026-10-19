@@ -1,0 +1,125 @@
+{
+  "provenance": {
+    "event": "Austrian Grand Prix",
+    "year": 2026,
+    "session": "Race",
+    "race_date": "2026-06-28",
+    "access_date": "2026-10-08",
+    "fastf1_version": "3.8.3",
+    "pandas_version": "2.3.3",
+    "source": "FastF1 session data accessed via get_session(2026, Austria, R)",
+    "timing_url": "https://livetiming.formula1.com/static/",
+    "reference": "https://docs.fastf1.dev/core.html",
+    "official_result": "https://www.formula1.com/en/results/2026/races/1288/austria/race-result",
+    "telemetry_downloaded": false
+  },
+  "field_rows": 1339,
+  "selected_rows": 426,
+  "drivers": [
+    {
+      "Team": "Ferrari",
+      "Driver": "HAM",
+      "RecordedLaps": 71,
+      "PaceEligibleLaps": 61,
+      "Stints": 4
+    },
+    {
+      "Team": "Ferrari",
+      "Driver": "LEC",
+      "RecordedLaps": 71,
+      "PaceEligibleLaps": 58,
+      "Stints": 4
+    },
+    {
+      "Team": "Mercedes",
+      "Driver": "ANT",
+      "RecordedLaps": 71,
+      "PaceEligibleLaps": 61,
+      "Stints": 3
+    },
+    {
+      "Team": "Mercedes",
+      "Driver": "RUS",
+      "RecordedLaps": 71,
+      "PaceEligibleLaps": 60,
+      "Stints": 3
+    },
+    {
+      "Team": "Red Bull Racing",
+      "Driver": "HAD",
+      "RecordedLaps": 71,
+      "PaceEligibleLaps": 61,
+      "Stints": 3
+    },
+    {
+      "Team": "Red Bull Racing",
+      "Driver": "VER",
+      "RecordedLaps": 71,
+      "PaceEligibleLaps": 60,
+      "Stints": 3
+    }
+  ],
+  "core_missing": {
+    "LapTime": 0,
+    "Compound": 0,
+    "TyreLife": 0,
+    "Position": 0,
+    "Time": 0,
+    "Stint": 0
+  },
+  "sector_missing": {
+    "Sector1Time": 6,
+    "Sector2Time": 0,
+    "Sector3Time": 0
+  },
+  "duplicate_driver_laps": 0,
+  "accuracy_flagged": 55,
+  "pace_eligible": 361,
+  "pace_excluded": 65,
+  "pit_visits": 14,
+  "flagged_exclusive_categories": {
+    "pit_laps": 28,
+    "first_laps": 6,
+    "other_status_affected_laps": 21,
+    "unexplained": 0
+  },
+  "green_only_laps": 396,
+  "vsc_affected_laps": 25,
+  "yellow_affected_laps": 11,
+  "safety_car_affected_laps": 0,
+  "deleted_laps": 6,
+  "generated_laps": 0,
+  "track_status_counts": {
+    "1": 396,
+    "671": 9,
+    "12": 5,
+    "26": 5,
+    "16": 3,
+    "71": 3,
+    "167": 3,
+    "6": 1,
+    "126": 1
+  },
+  "compound_counts": {
+    "HARD": 271,
+    "MEDIUM": 126,
+    "SOFT": 29
+  },
+  "lap_time_range_seconds": [
+    70.374,
+    113.381
+  ],
+  "pit_lane_elapsed_range_seconds": [
+    21.04200000000037,
+    22.74200000000019
+  ],
+  "checks_passed": [
+    "source rows retained",
+    "unique driver-lap keys",
+    "positive lap durations",
+    "sector totals within 3ms for eligible laps",
+    "all pit entries/exits paired",
+    "nonnegative lap-boundary gaps"
+  ],
+  "raw_laps_sha256": "4e3286543ae9965a53986a3981a5a376b524187fa61877c17f31ab9029c6841e"
+}
