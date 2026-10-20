@@ -4,7 +4,7 @@ A group data visualisation project for F1 fans, initially studying the 2026 Aust
 
 ## Current status
 
-The audience brief, data audit and preparation pipeline are on this branch. We retain all 426 selected laps and mark 361 as eligible for initial normal-racing pace comparisons. No final performance findings have been established.
+The audience brief, data audit, preparation pipeline and story prototype are available. We retain all 426 selected laps and mark 361 as eligible for initial normal-racing pace comparisons. The pit/VSC exploration describes timestamp overlaps and event-window observations; pace/tyre exploration and actual audience feedback remain in progress. No final performance findings have been established.
 
 ## Research questions
 
@@ -70,6 +70,14 @@ After placing the original snapshot locally, reproduce the timing investigation 
 ```powershell
 & ".\.venv\Scripts\python.exe" scripts\validate_timing.py
 ```
+
+Reproduce the [pit-stop and VSC exploration](docs/pit-vsc-exploration/README.md) from the same snapshot, including its track-status and race-control files:
+
+```powershell
+& ".\.venv\Scripts\python.exe" scripts\explore_pit_vsc.py
+```
+
+The report includes derived event windows, all 14 pit visits, same-lap before/after comparisons and three static figures. Whole-lap VSC flags are distinguished from actual pit timestamp overlaps; near-boundary ordering is qualified. These observations do not estimate causal pit-stop gains.
 
 No missing values are imputed or slow laps automatically removed. Every selected source lap is retained. Columns ending in `Seconds` distinguish durations (LapTimeSeconds) from session-relative timestamps (TimeSeconds). Further comparisons need attention to stint phase, compound, traffic and fuel load.
 
