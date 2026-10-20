@@ -36,6 +36,12 @@ After downloading, reprocess offline:
 
 The preparation tests use the local raw snapshot; without it, they are skipped. Run the download first. The prepared-data tests check the committed files in `data/processed/austria-2026/` against each other and against audit_summary.json, and run without a download.
 
+Open the story interface prototype in a browser:
+
+```powershell
+& ".\.venv\Scripts\python.exe" -m streamlit run app\story.py
+```
+
 ## Data and documentation
 
 Raw laps, weather, results, race-control messages and track-status events remain locally in ignored `data/raw/austria-2026/`. Download caches are also ignored.
