@@ -1,0 +1,195 @@
+{
+  "raw_laps_sha256": "4e3286543ae9965a53986a3981a5a376b524187fa61877c17f31ab9029c6841e",
+  "selected_laps_checked": 426,
+  "excluded_reference_driver": "77",
+  "reference_change_seconds": 0.0,
+  "reference_drivers": {
+    "RUS": 57,
+    "ANT": 8,
+    "VER": 6
+  },
+  "pairwise_checks": [
+    {
+      "drivers": [
+        "ANT",
+        "HAD"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 9.094947017729282e-13
+    },
+    {
+      "drivers": [
+        "ANT",
+        "HAM"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 9.094947017729282e-13
+    },
+    {
+      "drivers": [
+        "ANT",
+        "LEC"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 1.8189894035458565e-12
+    },
+    {
+      "drivers": [
+        "ANT",
+        "RUS"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 1.8189894035458565e-12
+    },
+    {
+      "drivers": [
+        "ANT",
+        "VER"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 1.8189894035458565e-12
+    },
+    {
+      "drivers": [
+        "HAD",
+        "HAM"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 1.8189894035458565e-12
+    },
+    {
+      "drivers": [
+        "HAD",
+        "LEC"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 1.8189894035458565e-12
+    },
+    {
+      "drivers": [
+        "HAD",
+        "RUS"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 1.8189894035458565e-12
+    },
+    {
+      "drivers": [
+        "HAD",
+        "VER"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 9.094947017729282e-13
+    },
+    {
+      "drivers": [
+        "HAM",
+        "LEC"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 1.8189894035458565e-12
+    },
+    {
+      "drivers": [
+        "HAM",
+        "RUS"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 1.8189894035458565e-12
+    },
+    {
+      "drivers": [
+        "HAM",
+        "VER"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 1.8189894035458565e-12
+    },
+    {
+      "drivers": [
+        "LEC",
+        "RUS"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 1.8189894035458565e-12
+    },
+    {
+      "drivers": [
+        "LEC",
+        "VER"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 1.8189894035458565e-12
+    },
+    {
+      "drivers": [
+        "RUS",
+        "VER"
+      ],
+      "laps": 71,
+      "maximum_error_seconds": 9.094947017729282e-13
+    }
+  ],
+  "official_finish_checks": [
+    {
+      "driver": "RUS",
+      "position": 1,
+      "lap": 71,
+      "gap_seconds": 0.0,
+      "official_gap_seconds": 0.0,
+      "error_seconds": 0.0
+    },
+    {
+      "driver": "VER",
+      "position": 2,
+      "lap": 71,
+      "gap_seconds": 1.611,
+      "official_gap_seconds": 1.611,
+      "error_seconds": 0.0
+    },
+    {
+      "driver": "ANT",
+      "position": 3,
+      "lap": 71,
+      "gap_seconds": 1.986,
+      "official_gap_seconds": 1.986,
+      "error_seconds": 0.0
+    },
+    {
+      "driver": "HAM",
+      "position": 5,
+      "lap": 71,
+      "gap_seconds": 26.393,
+      "official_gap_seconds": 26.393,
+      "error_seconds": 0.0
+    },
+    {
+      "driver": "HAD",
+      "position": 6,
+      "lap": 71,
+      "gap_seconds": 29.399,
+      "official_gap_seconds": 29.399,
+      "error_seconds": 0.0
+    },
+    {
+      "driver": "LEC",
+      "position": 8,
+      "lap": 71,
+      "gap_seconds": 45.659,
+      "official_gap_seconds": 45.659,
+      "error_seconds": 0.0
+    }
+  ],
+  "winner_cumulative_seconds": 5197.979,
+  "session_status_evidence": {
+    "available": true,
+    "finished_seconds": 8626.455,
+    "winner_completion_seconds": 8625.925,
+    "finish_message_delay_seconds": 0.53,
+    "started_seconds": 3427.653,
+    "cumulative_duration_origin_seconds": 3427.946,
+    "start_origin_difference_seconds": 0.293
+  },
+  "scope": "Supports same-lap completion intervals, not instantaneous gaps or causal strategy effects.",
+  "limitation": "Cumulative checks share the retained timing source; official comparisons independently cover the finish only."
+}
