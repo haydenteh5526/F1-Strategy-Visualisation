@@ -1,5 +1,8 @@
-"""Check the data each replay car drives on."""
+"""Check the data each replay car drives on, and what the replay actually draws."""
 from pathlib import Path
+import re
+import shutil
+import subprocess
 import sys
 import unittest
 
@@ -32,6 +35,41 @@ class ReplayDataTests(unittest.TestCase):
         self.assertEqual(self.data['vsc'], [[23, 26], [51, 53]])
         self.assertLess(self.data['t0'], self.data['t1'])
         self.assertIn('LAP ${leaderLap}', replay.html(self.laps, 'positions', 'dark', 420))
+
+
+NODE = r"""
+const vm = require('vm'); let src = '';
+process.stdin.on('data', chunk => src += chunk).on('end', () => {
+  const svg = {clientWidth: 1000, innerHTML: ''};
+  vm.runInNewContext(src, {document: {getElementById: id => id === 'chart' ? svg : {}}, console,
+                           matchMedia: () => ({matches: true}), requestAnimationFrame: () => {}, addEventListener: () => {}});
+  process.stdout.write(svg.innerHTML);
+});
+"""
+
+
+def render(page: str) -> str:
+    """Run the replay's own drawing script (reduced motion, so it draws the finished race) and return the SVG."""
+    script = re.search(r'<script>(.*)</script>', page, re.S).group(1)
+    return subprocess.run(['node', '-e', NODE], input=script, capture_output=True, text=True, check=True).stdout
+
+
+@unittest.skipUnless(shutil.which('node'), 'needs Node.js to run the replay script')
+class ReplayRenderTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.laps = charts.load_data(ROOT/'data/processed/austria-2026')['laps']
+
+    def test_vsc_chart_draws_vsc_laps_and_markers(self):
+        drawn = render(replay.html(self.laps, 'vsc', 'dark', 420))
+        self.assertIn('HAD lap 25: 100.460 s', drawn)
+        self.assertEqual(drawn.count('>VSC</text>'), 2)
+        self.assertNotIn('HAD lap 1: ', drawn)
+
+    def test_every_replay_draws(self):
+        for kind in ['timeline', 'positions', 'pace', 'tyres', 'vsc']:
+            with self.subTest(kind):
+                self.assertIn('<defs>', render(replay.html(self.laps, kind, 'dark', 420)))
 
 
 if __name__ == '__main__':

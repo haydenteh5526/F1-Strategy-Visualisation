@@ -34,7 +34,7 @@ def race_data(laps: pd.DataFrame, mode: str) -> dict:
             't0': min(d['laps'][0]['start'] for d in drivers), 't1': max(d['laps'][-1]['end'] for d in drivers),
             'tyres': dict(zip(charts.COMPOUNDS, charts.COMPOUND_COLORS)),
             'ink': charts.INK[mode], 'muted': '#898781', 'grid': '#2c2c38' if mode == 'dark' else '#e6eaf1',
-            'surface': charts.SURFACE[mode]}
+            'surface': charts.SURFACE[mode], 'vscColor': '#eda100'}
 
 
 def html(laps: pd.DataFrame, kind: str, mode: str, height: int) -> str:
@@ -85,7 +85,7 @@ function car(x, y, color, title) {
 
 function lapFrame(t) {
   const W = svg.clientWidth || 900, finish = D.finish;
-  const M = KIND === 'timeline' ? {l: 78, r: 24, t: 34, b: 34} : {l: 48, r: 54, t: 34, b: 34};
+  const M = KIND === 'timeline' ? {l: 78, r: 24, t: 34, b: 34} : {l: 48, r: 54, t: KIND === 'vsc' ? 62 : 34, b: 34};
   const xs = lap => M.l + lap / (finish + .6) * (W - M.l - M.r);
   const plotB = H - M.b;
   const ps = D.drivers.map(d => progress(d, t));
@@ -95,7 +95,7 @@ function lapFrame(t) {
     s += `<line x1="${xs(lap)}" x2="${xs(lap)}" y1="${M.t}" y2="${plotB}" stroke="${D.grid}"/>`
        + `<text class="axis" x="${xs(lap)}" y="${plotB + 16}" fill="${D.ink}" text-anchor="middle">${lap}</text>`;
   s += `<text class="axis" x="${(M.l + W - M.r) / 2}" y="${H - 2}" fill="${D.ink}" text-anchor="middle" font-weight="700">Lap</text>`;
-  if (KIND !== 'vsc') for (const [a, b] of D.vsc)
+  if (KIND !== 'vsc') for (const [a, b] of D.vsc)  // The VSC chart draws its own yellow markers.
     s += `<rect x="${xs(a)}" y="${M.t}" width="${xs(b) - xs(a)}" height="${plotB - M.t}" fill="${D.muted}" opacity=".16"/>`
        + `<text class="axis" x="${xs(a) + 3}" y="${M.t + 12}" fill="${D.muted}">VSC</text>`;
   s += `<line x1="${xs(finish)}" x2="${xs(finish)}" y1="${M.t}" y2="${plotB}" stroke="${D.ink}" stroke-dasharray="3 3" opacity=".6"/>`
@@ -143,13 +143,19 @@ function lapFrame(t) {
       else s += `<text class="label" x="${xs(finish) + 6}" y="${y + 4}" fill="${D.ink}">${d.code}</text>`;
     });
   } else if (KIND === 'vsc') {
-    // Racing laps only: VSC laps, lap 1 and pit laps are left out so the pack fills the chart.
-    const pts = D.drivers.map(d => d.laps.filter(l => !l.pitOrStart && !l.vscLap));
-    const all = pts.flat().map(l => l.time), lo = Math.floor(Math.min(...all)), hi = Math.ceil(Math.max(...all));
-    const ys = v => plotB - (v - lo) / (hi - lo) * (plotB - M.t);
-    for (let v = lo; v <= hi; v++)
+    // Every lap except lap 1 and pit laps, so the VSC slowdown stays visible against normal racing.
+    const pts = D.drivers.map(d => d.laps.filter(l => !l.pitOrStart));
+    const all = pts.flat().map(l => l.time), lo = Math.floor(Math.min(...all)) - 1, hi = Math.ceil(Math.max(...all)) + 1;
+    const ys = v => plotB - (v - lo) / (hi - lo) * (plotB - M.t), step = hi - lo > 15 ? 5 : 1;
+    for (let v = Math.ceil(lo / step) * step; v <= hi; v += step)
       s += `<line x1="${M.l}" x2="${W - M.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="${D.grid}"/>`
          + `<text class="axis" x="${M.l - 8}" y="${ys(v) + 4}" fill="${D.ink}" text-anchor="end">${v}</text>`;
+    for (const [a, b] of D.vsc) {  // Yellow VSC strip that lights up while the leader is in the period.
+      const active = leaderLap > a && leaderLap <= b && leaderLap < finish;
+      s += `<rect x="${xs(a)}" y="${M.t}" width="${xs(b) - xs(a)}" height="${plotB - M.t}" fill="${D.vscColor}" opacity="${active ? .14 : .06}"/>`
+         + `<rect x="${xs(a)}" y="${M.t - 10}" width="${xs(b) - xs(a)}" height="6" rx="3" fill="${D.vscColor}" opacity="${active ? 1 : .55}"/>`
+         + `<text class="label" x="${xs(a)}" y="${M.t - 15}" fill="${D.vscColor}">${active ? 'VSC DEPLOYED' : 'VSC'}</text>`;
+    }
     s += yTitle('Lap time (s)', M.t, plotB) + legend(120, 20);
     D.drivers.forEach((d, i) => {
       const p = ps[i], seen = pts[i].filter(l => l.lap <= p);
