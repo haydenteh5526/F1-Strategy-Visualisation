@@ -108,8 +108,8 @@ def vsc_slide() -> None:
     st.write(f'VSC periods affected laps {lap_ranges(vsc)}. These laps are left out of pace comparisons '
              'but still matter for pit-stop timing.' if len(vsc) else 'No VSC laps for the selected teams.')
     st.iframe(replay.html(laps, 'vsc', mode, 420), height=430)
-    st.caption('Each car drops a dot for every lap except lap 1 and pit-stop laps. The yellow strips mark Virtual Safety Car '
-               'periods; the dots that jump up are the slower VSC laps.')
+    st.caption('Each car drops a dot for every lap except lap 1 and pit-stop laps. The yellow strips cover the laps flagged as '
+               'Virtual Safety Car affected, and the label follows the recorded VSC times (deployed, then ending).')
 
 
 SLIDES = {'The race at a glance': overview_slide,

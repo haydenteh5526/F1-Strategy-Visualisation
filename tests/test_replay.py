@@ -41,17 +41,20 @@ NODE = r"""
 const vm = require('vm'); let src = '';
 process.stdin.on('data', chunk => src += chunk).on('end', () => {
   const svg = {clientWidth: 1000, innerHTML: ''};
-  vm.runInNewContext(src, {document: {getElementById: id => id === 'chart' ? svg : {}}, console,
-                           matchMedia: () => ({matches: true}), requestAnimationFrame: () => {}, addEventListener: () => {}});
+  const context = vm.createContext({document: {getElementById: id => id === 'chart' ? svg : {}}, console,
+                                    matchMedia: () => ({matches: true}), requestAnimationFrame: () => {}, addEventListener: () => {}});
+  vm.runInContext(src, context);  // Reduced motion, so this draws the finished race.
+  if (process.argv[1] !== 'end') vm.runInContext(`frame(${process.argv[1]})`, context);  // Redraw at a session time.
   process.stdout.write(svg.innerHTML);
 });
 """
 
 
-def render(page: str) -> str:
-    """Run the replay's own drawing script (reduced motion, so it draws the finished race) and return the SVG."""
+def render(page: str, at: float | None = None) -> str:
+    """Run the replay's own drawing script and return the SVG, at the end of the race or at a session time (seconds)."""
     script = re.search(r'<script>(.*)</script>', page, re.S).group(1)
-    return subprocess.run(['node', '-e', NODE], input=script, capture_output=True, text=True, check=True).stdout
+    return subprocess.run(['node', '-e', NODE, 'end' if at is None else str(at)], input=script,
+                          capture_output=True, text=True, check=True).stdout
 
 
 @unittest.skipUnless(shutil.which('node'), 'needs Node.js to run the replay script')
@@ -65,6 +68,22 @@ class ReplayRenderTests(unittest.TestCase):
         self.assertIn('HAD lap 25: 100.460 s', drawn)
         self.assertEqual(drawn.count('>VSC</text>'), 2)
         self.assertNotIn('HAD lap 1: ', drawn)
+
+    def test_vsc_status_follows_the_recorded_clock(self):
+        page = replay.html(self.laps, 'vsc', 'dark', 420)
+        for name, start, ending, clear in [(w['event'], w['start'], w['ending'], w['clear']) for w in
+                                           [{'event': f'VSC {i}', **c} for i, c in enumerate(replay.vsc_clock(), 1)]]:
+            with self.subTest(name):
+                self.assertNotIn('VSC DEPLOYED', render(page, start-30))   # Affected laps have begun; VSC has not.
+                self.assertNotIn('VSC ENDING', render(page, start-30))
+                self.assertIn('VSC DEPLOYED', render(page, start+1))
+                self.assertIn('VSC ENDING', render(page, ending+1))
+                self.assertNotIn('VSC DEPLOYED', render(page, ending+1))
+                self.assertNotIn('VSC ENDING', render(page, clear+1))
+
+    def test_no_status_text_without_the_recorded_clock(self):
+        page = replay.html(self.laps, 'vsc', 'dark', 420).replace('"vscClock": [', '"vscClock": [], "unused": [')
+        self.assertNotIn('VSC DEPLOYED', render(page, replay.vsc_clock()[0]['start']+1))
 
     def test_every_replay_draws(self):
         for kind in ['timeline', 'positions', 'pace', 'tyres', 'vsc']:

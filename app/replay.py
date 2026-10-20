@@ -2,12 +2,23 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pandas as pd
 
 import charts
 
 DURATION_MS = 9000  # Whole race, compressed.
+# Recorded deployment, ending and all-clear times of each VSC, from the committed pit/VSC exploration.
+VSC_CLOCK = Path(__file__).resolve().parents[1]/'docs/pit-vsc-exploration/summary.json'
+
+
+def vsc_clock(path: Path = VSC_CLOCK) -> list[dict]:
+    """Session-clock seconds for each VSC; empty if the exploration summary is missing, so no live status is shown."""
+    if not path.exists():
+        return []
+    return [{'start': w['start_seconds'], 'ending': w['ending_seconds'], 'clear': w['clear_seconds']}
+            for w in json.loads(path.read_text(encoding='utf-8'))['windows']]
 
 
 def race_data(laps: pd.DataFrame, mode: str) -> dict:
@@ -29,7 +40,7 @@ def race_data(laps: pd.DataFrame, mode: str) -> dict:
     summary = charts.pace_summary(laps.loc[laps.EligibleForPace]).set_index('Driver')
     pace = [{'code': d['code'], 'color': d['color'], 'low': float(summary.Low[d['code']]), 'high': float(summary.High[d['code']]),
              'typical': float(summary.Typical[d['code']])} for d in drivers]
-    return {'drivers': drivers, 'pace': pace, 'vsc': [[int(b.Start)-1, int(b.End)] for b in bands.itertuples()],
+    return {'drivers': drivers, 'pace': pace, 'vscClock': vsc_clock(), 'vsc': [[int(b.Start)-1, int(b.End)] for b in bands.itertuples()],
             'finish': int(laps.LapNumber.max()), 'duration': DURATION_MS,
             't0': min(d['laps'][0]['start'] for d in drivers), 't1': max(d['laps'][-1]['end'] for d in drivers),
             'tyres': dict(zip(charts.COMPOUNDS, charts.COMPOUND_COLORS)),
@@ -150,12 +161,12 @@ function lapFrame(t) {
     for (let v = Math.ceil(lo / step) * step; v <= hi; v += step)
       s += `<line x1="${M.l}" x2="${W - M.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="${D.grid}"/>`
          + `<text class="axis" x="${M.l - 8}" y="${ys(v) + 4}" fill="${D.ink}" text-anchor="end">${v}</text>`;
-    for (const [a, b] of D.vsc) {  // Yellow VSC strip that lights up while the leader is in the period.
-      const active = leaderLap > a && leaderLap <= b && leaderLap < finish;
-      s += `<rect x="${xs(a)}" y="${M.t}" width="${xs(b) - xs(a)}" height="${plotB - M.t}" fill="${D.vscColor}" opacity="${active ? .14 : .06}"/>`
-         + `<rect x="${xs(a)}" y="${M.t - 10}" width="${xs(b) - xs(a)}" height="6" rx="3" fill="${D.vscColor}" opacity="${active ? 1 : .55}"/>`
-         + `<text class="label" x="${xs(a)}" y="${M.t - 15}" fill="${D.vscColor}">${active ? 'VSC DEPLOYED' : 'VSC'}</text>`;
-    }
+    D.vsc.forEach(([a, b], i) => {  // Strips span the laps flagged as VSC-affected; the status text follows the recorded clock.
+      const c = D.vscClock[i], status = !c ? '' : t >= c.start && t < c.ending ? 'DEPLOYED' : t >= c.ending && t < c.clear ? 'ENDING' : '';
+      s += `<rect x="${xs(a)}" y="${M.t}" width="${xs(b) - xs(a)}" height="${plotB - M.t}" fill="${D.vscColor}" opacity="${status ? .14 : .06}"/>`
+         + `<rect x="${xs(a)}" y="${M.t - 10}" width="${xs(b) - xs(a)}" height="6" rx="3" fill="${D.vscColor}" opacity="${status ? 1 : .55}"/>`
+         + `<text class="label" x="${xs(a)}" y="${M.t - 15}" fill="${D.vscColor}">${status ? 'VSC ' + status : 'VSC'}</text>`;
+    });
     s += yTitle('Lap time (s)', M.t, plotB) + legend(120, 20);
     D.drivers.forEach((d, i) => {
       const p = ps[i], seen = pts[i].filter(l => l.lap <= p);
