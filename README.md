@@ -42,6 +42,12 @@ Open the story interface prototype in a browser:
 & ".\.venv\Scripts\python.exe" -m streamlit run app\story.py
 ```
 
+Save the charts as images in `figures/austria-2026/` for slides and the static story:
+
+```powershell
+& ".\.venv\Scripts\python.exe" scripts\export_figures.py
+```
+
 ## Data and documentation
 
 Raw laps, weather, results, race-control messages and track-status events remain locally in ignored `data/raw/austria-2026/`. Download caches are also ignored.

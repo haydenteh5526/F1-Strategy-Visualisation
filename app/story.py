@@ -1,7 +1,6 @@
 """Prototype of the fan-facing story interface. Run with: streamlit run app/story.py"""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pandas as pd
@@ -30,10 +29,7 @@ GLOSSARY = {
 
 @st.cache_data
 def load() -> dict:
-    status = {'TrackStatus': str, 'EntryTrackStatus': str, 'ExitTrackStatus': str}
-    read = lambda name: pd.read_csv(DATA/name, dtype=status)
-    return {'laps': read('selected_laps.csv'), 'stints': read('stints.csv'), 'visits': read('pit_visits.csv'),
-            'summary': json.loads((DATA/'audit_summary.json').read_text())}
+    return charts.load_data(DATA)
 
 
 def lap_ranges(laps: pd.Series) -> str:

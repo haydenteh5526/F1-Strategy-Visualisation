@@ -1,6 +1,9 @@
 """Prototype Altair charts for the story interface, built from the prepared data."""
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import altair as alt
 import pandas as pd
 
@@ -12,7 +15,16 @@ TEAM_COLORS = {'light': ['#2a78d6', '#1baf7a', '#eb6834'], 'dark': ['#3987e5', '
 COMPOUNDS = ['SOFT', 'MEDIUM', 'HARD']
 COMPOUND_COLORS = ['#e34948', '#eda100', '#898781']
 VSC_FILL = '#898781'
+STATUS_COLUMNS = {'TrackStatus': str, 'EntryTrackStatus': str, 'ExitTrackStatus': str}
 SURFACE = {'light': '#ffffff', 'dark': '#0e1117'}
+
+
+
+def load_data(data_dir: Path) -> dict:
+    """Read the prepared Austria 2026 files the charts use."""
+    read = lambda name: pd.read_csv(data_dir/name, dtype=STATUS_COLUMNS)
+    return {'laps': read('selected_laps.csv'), 'stints': read('stints.csv'), 'visits': read('pit_visits.csv'),
+            'summary': json.loads((data_dir/'audit_summary.json').read_text())}
 
 
 def driver_order(frame: pd.DataFrame) -> list[str]:
