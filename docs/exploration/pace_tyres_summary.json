@@ -1,0 +1,561 @@
+{
+  "source": "data/processed/austria-2026/selected_laps.csv (pace-eligible laps)",
+  "whole_race": {
+    "ANT": {
+      "laps": 61,
+      "median_seconds": 71.644,
+      "middle_half_seconds": 1.352
+    },
+    "HAD": {
+      "laps": 61,
+      "median_seconds": 71.91,
+      "middle_half_seconds": 1.14
+    },
+    "HAM": {
+      "laps": 61,
+      "median_seconds": 71.887,
+      "middle_half_seconds": 0.848
+    },
+    "LEC": {
+      "laps": 58,
+      "median_seconds": 71.952,
+      "middle_half_seconds": 1.336
+    },
+    "RUS": {
+      "laps": 60,
+      "median_seconds": 71.662,
+      "middle_half_seconds": 0.94
+    },
+    "VER": {
+      "laps": 60,
+      "median_seconds": 71.76,
+      "middle_half_seconds": 1.209
+    }
+  },
+  "same_compound_windows": {
+    "Medium, laps 2–11": {
+      "ANT": {
+        "laps": 9,
+        "median_seconds": 72.285
+      },
+      "HAD": {
+        "laps": 10,
+        "median_seconds": 72.973
+      },
+      "HAM": {
+        "laps": 10,
+        "median_seconds": 72.438
+      },
+      "LEC": {
+        "laps": 9,
+        "median_seconds": 72.717
+      },
+      "RUS": {
+        "laps": 10,
+        "median_seconds": 72.006
+      },
+      "VER": {
+        "laps": 9,
+        "median_seconds": 72.084
+      }
+    },
+    "Hard, laps 44–59": {
+      "ANT": {
+        "laps": 13,
+        "median_seconds": 71.723
+      },
+      "HAD": {
+        "laps": 14,
+        "median_seconds": 71.481
+      },
+      "HAM": {
+        "laps": 14,
+        "median_seconds": 71.299
+      },
+      "LEC": {
+        "laps": 13,
+        "median_seconds": 71.718
+      },
+      "RUS": {
+        "laps": 12,
+        "median_seconds": 70.945
+      },
+      "VER": {
+        "laps": 12,
+        "median_seconds": 70.761
+      }
+    }
+  },
+  "stints": [
+    {
+      "driver": "ANT",
+      "stint": 1,
+      "compound": "MEDIUM",
+      "laps": "1–24",
+      "recorded_laps": 24,
+      "eligible_laps": 20,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 2,
+        "deleted_lap": 2,
+        "first_lap": 1,
+        "pit_in": 1,
+        "track_status_not_green_only": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.04
+    },
+    {
+      "driver": "ANT",
+      "stint": 2,
+      "compound": "HARD",
+      "laps": "25–51",
+      "recorded_laps": 27,
+      "eligible_laps": 23,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 3,
+        "track_status_not_green_only": 2,
+        "pit_out": 1,
+        "deleted_lap": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.027
+    },
+    {
+      "driver": "ANT",
+      "stint": 3,
+      "compound": "HARD",
+      "laps": "52–71",
+      "recorded_laps": 20,
+      "eligible_laps": 18,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "track_status_not_green_only": 2,
+        "fastf1_accuracy_flag": 2,
+        "pit_out": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.022
+    },
+    {
+      "driver": "HAD",
+      "stint": 1,
+      "compound": "MEDIUM",
+      "laps": "1–18",
+      "recorded_laps": 18,
+      "eligible_laps": 16,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 2,
+        "first_lap": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.052
+    },
+    {
+      "driver": "HAD",
+      "stint": 2,
+      "compound": "MEDIUM",
+      "laps": "19–40",
+      "recorded_laps": 22,
+      "eligible_laps": 17,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 5,
+        "track_status_not_green_only": 3,
+        "pit_out": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.055
+    },
+    {
+      "driver": "HAD",
+      "stint": 3,
+      "compound": "HARD",
+      "laps": "41–71",
+      "recorded_laps": 31,
+      "eligible_laps": 28,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 3,
+        "track_status_not_green_only": 2,
+        "pit_out": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.026
+    },
+    {
+      "driver": "HAM",
+      "stint": 1,
+      "compound": "MEDIUM",
+      "laps": "1–12",
+      "recorded_laps": 12,
+      "eligible_laps": 10,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 2,
+        "first_lap": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.206
+    },
+    {
+      "driver": "HAM",
+      "stint": 2,
+      "compound": "HARD",
+      "laps": "13–25",
+      "recorded_laps": 13,
+      "eligible_laps": 10,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 2,
+        "track_status_not_green_only": 2,
+        "pit_out": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.029
+    },
+    {
+      "driver": "HAM",
+      "stint": 3,
+      "compound": "SOFT",
+      "laps": "26–42",
+      "recorded_laps": 17,
+      "eligible_laps": 15,
+      "fresh_set": false,
+      "first_tyre_age": 3,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 2,
+        "pit_out": 1,
+        "track_status_not_green_only": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.084
+    },
+    {
+      "driver": "HAM",
+      "stint": 4,
+      "compound": "HARD",
+      "laps": "43–71",
+      "recorded_laps": 29,
+      "eligible_laps": 26,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 3,
+        "track_status_not_green_only": 2,
+        "pit_out": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.047
+    },
+    {
+      "driver": "LEC",
+      "stint": 1,
+      "compound": "MEDIUM",
+      "laps": "1–13",
+      "recorded_laps": 13,
+      "eligible_laps": 10,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 2,
+        "first_lap": 1,
+        "deleted_lap": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.148
+    },
+    {
+      "driver": "LEC",
+      "stint": 2,
+      "compound": "HARD",
+      "laps": "14–37",
+      "recorded_laps": 24,
+      "eligible_laps": 19,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 4,
+        "track_status_not_green_only": 3,
+        "pit_out": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": -0.013
+    },
+    {
+      "driver": "LEC",
+      "stint": 3,
+      "compound": "HARD",
+      "laps": "38–59",
+      "recorded_laps": 22,
+      "eligible_laps": 18,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 4,
+        "track_status_not_green_only": 2,
+        "pit_out": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.081
+    },
+    {
+      "driver": "LEC",
+      "stint": 4,
+      "compound": "SOFT",
+      "laps": "60–71",
+      "recorded_laps": 12,
+      "eligible_laps": 11,
+      "fresh_set": false,
+      "first_tyre_age": 4,
+      "exclusion_reasons": {
+        "pit_out": 1,
+        "fastf1_accuracy_flag": 1
+      },
+      "trend_seconds_per_tyre_lap": -0.017
+    },
+    {
+      "driver": "RUS",
+      "stint": 1,
+      "compound": "MEDIUM",
+      "laps": "1–19",
+      "recorded_laps": 19,
+      "eligible_laps": 17,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 2,
+        "first_lap": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.087
+    },
+    {
+      "driver": "RUS",
+      "stint": 2,
+      "compound": "HARD",
+      "laps": "20–43",
+      "recorded_laps": 24,
+      "eligible_laps": 19,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 4,
+        "track_status_not_green_only": 3,
+        "pit_out": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.048
+    },
+    {
+      "driver": "RUS",
+      "stint": 3,
+      "compound": "HARD",
+      "laps": "44–71",
+      "recorded_laps": 28,
+      "eligible_laps": 24,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 3,
+        "track_status_not_green_only": 2,
+        "pit_out": 1,
+        "deleted_lap": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.03
+    },
+    {
+      "driver": "VER",
+      "stint": 1,
+      "compound": "MEDIUM",
+      "laps": "1–18",
+      "recorded_laps": 18,
+      "eligible_laps": 15,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 2,
+        "first_lap": 1,
+        "deleted_lap": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.071
+    },
+    {
+      "driver": "VER",
+      "stint": 2,
+      "compound": "HARD",
+      "laps": "19–49",
+      "recorded_laps": 31,
+      "eligible_laps": 26,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 4,
+        "track_status_not_green_only": 3,
+        "pit_out": 1,
+        "pit_in": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.04
+    },
+    {
+      "driver": "VER",
+      "stint": 3,
+      "compound": "HARD",
+      "laps": "50–71",
+      "recorded_laps": 22,
+      "eligible_laps": 19,
+      "fresh_set": true,
+      "first_tyre_age": 1,
+      "exclusion_reasons": {
+        "fastf1_accuracy_flag": 3,
+        "track_status_not_green_only": 2,
+        "pit_out": 1
+      },
+      "trend_seconds_per_tyre_lap": 0.035
+    }
+  ],
+  "same_compound_race_phase": [
+    {
+      "driver": "ANT",
+      "compound": "HARD",
+      "stints": [
+        2,
+        3
+      ],
+      "shared_tyre_ages": [
+        3,
+        20
+      ],
+      "shared_age_count": 17,
+      "earlier_median_seconds": 71.395,
+      "later_median_seconds": 70.549,
+      "later_minus_earlier_seconds": -0.846
+    },
+    {
+      "driver": "HAD",
+      "compound": "MEDIUM",
+      "stints": [
+        1,
+        2
+      ],
+      "shared_tyre_ages": [
+        2,
+        17
+      ],
+      "shared_age_count": 13,
+      "earlier_median_seconds": 73.467,
+      "later_median_seconds": 71.839,
+      "later_minus_earlier_seconds": -1.628
+    },
+    {
+      "driver": "HAM",
+      "compound": "HARD",
+      "stints": [
+        2,
+        4
+      ],
+      "shared_tyre_ages": [
+        2,
+        9
+      ],
+      "shared_age_count": 8,
+      "earlier_median_seconds": 72.31,
+      "later_median_seconds": 71.241,
+      "later_minus_earlier_seconds": -1.069
+    },
+    {
+      "driver": "LEC",
+      "compound": "HARD",
+      "stints": [
+        2,
+        3
+      ],
+      "shared_tyre_ages": [
+        2,
+        21
+      ],
+      "shared_age_count": 15,
+      "earlier_median_seconds": 72.245,
+      "later_median_seconds": 71.665,
+      "later_minus_earlier_seconds": -0.58
+    },
+    {
+      "driver": "RUS",
+      "compound": "HARD",
+      "stints": [
+        2,
+        3
+      ],
+      "shared_tyre_ages": [
+        2,
+        23
+      ],
+      "shared_age_count": 16,
+      "earlier_median_seconds": 72.001,
+      "later_median_seconds": 71.09,
+      "later_minus_earlier_seconds": -0.91
+    },
+    {
+      "driver": "VER",
+      "compound": "HARD",
+      "stints": [
+        2,
+        3
+      ],
+      "shared_tyre_ages": [
+        2,
+        22
+      ],
+      "shared_age_count": 16,
+      "earlier_median_seconds": 71.549,
+      "later_median_seconds": 70.976,
+      "later_minus_earlier_seconds": -0.573
+    }
+  ],
+  "traffic": {
+    "available": true,
+    "close_seconds": 1.0,
+    "share_of_laps_close": {
+      "ANT": 0.18,
+      "HAD": 0.246,
+      "HAM": 0.246,
+      "LEC": 0.103,
+      "RUS": 0.067,
+      "VER": 0.167
+    },
+    "medians_without_close_laps": {
+      "ANT": {
+        "laps": 50,
+        "median_seconds": 71.62
+      },
+      "HAD": {
+        "laps": 46,
+        "median_seconds": 71.85
+      },
+      "HAM": {
+        "laps": 46,
+        "median_seconds": 71.715
+      },
+      "LEC": {
+        "laps": 52,
+        "median_seconds": 71.918
+      },
+      "RUS": {
+        "laps": 56,
+        "median_seconds": 71.733
+      },
+      "VER": {
+        "laps": 50,
+        "median_seconds": 71.669
+      }
+    }
+  },
+  "limitations": "Descriptive only. Fuel load, track evolution, traffic and tyre age overlap; none of these numbers isolates a cause."
+}
