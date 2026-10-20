@@ -63,7 +63,13 @@ Prepared files in `data/processed/austria-2026/`:
 | stints.csv | Driver-level stint boundaries, compounds and eligible-lap counts |
 | audit_summary.json | Coverage, validation, source versions, provenance and raw-laps hash |
 
-`GapToEarliestLapCompletionSeconds` compares timestamps for the same lap number against the earliest full-field completion. It is not an instantaneous/live gap. Investigate the full-field alignment warning for driver 77 before using field-reference gaps in final charts.
+`GapToEarliestLapCompletionSeconds` compares timestamps for the same lap number against the earliest eligible field completion. It is not an instantaneous/live gap. The known unaligned driver 77 is excluded from the reference pool; this leaves the current selected intervals unchanged. See the [timing investigation](docs/timing-validation/README.md) for the warning disposition, independent finishing checks and chart limitations.
+
+After placing the original snapshot locally, reproduce the timing investigation without a download:
+
+```powershell
+& ".\.venv\Scripts\python.exe" scripts\validate_timing.py
+```
 
 No missing values are imputed or slow laps automatically removed. Every selected source lap is retained. Columns ending in `Seconds` distinguish durations (LapTimeSeconds) from session-relative timestamps (TimeSeconds). Further comparisons need attention to stint phase, compound, traffic and fuel load.
 
