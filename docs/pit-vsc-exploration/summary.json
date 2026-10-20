@@ -1,0 +1,202 @@
+{
+  "event": "Austria 2026",
+  "selected_laps": 426,
+  "pit_visits": 14,
+  "vsc_affected_laps": 25,
+  "nonpit_vsc_laps": 21,
+  "nonpit_vsc_time_range_seconds": [
+    72.139,
+    100.46
+  ],
+  "whole_lap_vsc_flagged_visits": 3,
+  "timestamp_overlapping_visits": 1,
+  "boundary_sensitive_visits": 1,
+  "windows": [
+    {
+      "event": "VSC 1",
+      "start_seconds": 5202.549,
+      "ending_seconds": 5359.277,
+      "clear_seconds": 5372.352,
+      "deployed_seconds": 156.728,
+      "restriction_seconds": 169.803,
+      "affected_laps_by_driver": {
+        "ANT": [
+          25,
+          26
+        ],
+        "HAD": [
+          24,
+          25,
+          26
+        ],
+        "HAM": [
+          25,
+          26
+        ],
+        "LEC": [
+          25,
+          26
+        ],
+        "RUS": [
+          25,
+          26
+        ],
+        "VER": [
+          25,
+          26
+        ]
+      },
+      "nonpit_plot_samples": {
+        "ANT": {
+          "vsc": 1,
+          "eligible_normal_pace": 1,
+          "other": 0
+        },
+        "HAD": {
+          "vsc": 3,
+          "eligible_normal_pace": 1,
+          "other": 0
+        },
+        "HAM": {
+          "vsc": 0,
+          "eligible_normal_pace": 1,
+          "other": 1
+        },
+        "LEC": {
+          "vsc": 2,
+          "eligible_normal_pace": 2,
+          "other": 1
+        },
+        "RUS": {
+          "vsc": 2,
+          "eligible_normal_pace": 2,
+          "other": 1
+        },
+        "VER": {
+          "vsc": 2,
+          "eligible_normal_pace": 2,
+          "other": 1
+        }
+      },
+      "comparison_before_lap": 23,
+      "comparison_after_lap": 27
+    },
+    {
+      "event": "VSC 2",
+      "start_seconds": 7251.463,
+      "ending_seconds": 7284.728,
+      "clear_seconds": 7295.694,
+      "deployed_seconds": 33.265,
+      "restriction_seconds": 44.231,
+      "affected_laps_by_driver": {
+        "ANT": [
+          52,
+          53
+        ],
+        "HAD": [
+          52,
+          53
+        ],
+        "HAM": [
+          52,
+          53
+        ],
+        "LEC": [
+          52,
+          53
+        ],
+        "RUS": [
+          52,
+          53
+        ],
+        "VER": [
+          52,
+          53
+        ]
+      },
+      "nonpit_plot_samples": {
+        "ANT": {
+          "vsc": 1,
+          "eligible_normal_pace": 0,
+          "other": 0
+        },
+        "HAD": {
+          "vsc": 2,
+          "eligible_normal_pace": 1,
+          "other": 0
+        },
+        "HAM": {
+          "vsc": 2,
+          "eligible_normal_pace": 1,
+          "other": 0
+        },
+        "LEC": {
+          "vsc": 2,
+          "eligible_normal_pace": 1,
+          "other": 0
+        },
+        "RUS": {
+          "vsc": 2,
+          "eligible_normal_pace": 1,
+          "other": 0
+        },
+        "VER": {
+          "vsc": 2,
+          "eligible_normal_pace": 1,
+          "other": 0
+        }
+      },
+      "comparison_before_lap": 51,
+      "comparison_after_lap": 54
+    }
+  ],
+  "race_control_alignment": {
+    "method": "Ordered DEPLOYED/ENDING pairs; median UTC-minus-session offset. This is an approximate message-clock check, not independent timing validation.",
+    "maximum_residual_seconds": 0.229,
+    "offset_spread_seconds": 0.451,
+    "transitions": [
+      {
+        "event": "VSC 1",
+        "transition": "VSC DEPLOYED",
+        "session_seconds": 5202.549,
+        "message_utc": "2026-06-28T13:32:52+00:00",
+        "message_lap": 25,
+        "residual_seconds": -0.043
+      },
+      {
+        "event": "VSC 2",
+        "transition": "VSC DEPLOYED",
+        "session_seconds": 7251.463,
+        "message_utc": "2026-06-28T14:07:01+00:00",
+        "message_lap": 52,
+        "residual_seconds": 0.043
+      },
+      {
+        "event": "VSC 1",
+        "transition": "VSC ENDING",
+        "session_seconds": 5359.277,
+        "message_utc": "2026-06-28T13:35:29+00:00",
+        "message_lap": 26,
+        "residual_seconds": 0.229
+      },
+      {
+        "event": "VSC 2",
+        "transition": "VSC ENDING",
+        "session_seconds": 7284.728,
+        "message_utc": "2026-06-28T14:07:34+00:00",
+        "message_lap": 53,
+        "residual_seconds": -0.222
+      }
+    ]
+  },
+  "scope": "Descriptive timestamp overlaps and same-completed-lap intervals. No instantaneous gaps, stationary service times or causal pit-stop gains.",
+  "boundary_convention": "[start, end); code 7 remains restricted until code 1. Within 1 second of a transition is flagged for caution; this is a sensitivity rule, not a measured timing error bound.",
+  "input_hash_convention": "Raw hashes use exact bytes; prepared CSV hashes normalize CRLF to LF for Git checkouts.",
+  "input_sha256": {
+    "data/raw/austria-2026/laps.csv": "4e3286543ae9965a53986a3981a5a376b524187fa61877c17f31ab9029c6841e",
+    "data/raw/austria-2026/track_status.csv": "651b7d12342d40546347ee4815cb424124ba22a2834a1e76b8ad4afc8e61eaa4",
+    "data/raw/austria-2026/race_control_messages.csv": "884db1dc01e288d270ab17f6402563b51b66470a00d3854501f2a234224b68d4",
+    "data/processed/austria-2026/selected_laps.csv": "a8278b0198c893877fc0da7616adc25e04c7b0490f9917322ce988a6f97a8af2",
+    "data/processed/austria-2026/pit_visits.csv": "0669d7b36ba7da797f6b526d7f67c224b9e4643d5370dfc3802f679f56ef6d01"
+  }
+}
