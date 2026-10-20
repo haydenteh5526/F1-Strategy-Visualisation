@@ -108,7 +108,7 @@ def vsc_slide() -> None:
     st.write(f'VSC periods affected laps {lap_ranges(vsc)}. These laps are left out of pace comparisons '
              'but still matter for pit-stop timing.' if len(vsc) else 'No VSC laps for the selected teams.')
     st.iframe(replay.html(laps, 'vsc', mode, 420), height=430)
-    st.caption('Lap 1 and pit-stop laps are left out, so the jumps inside the grey bands show the VSC slowdown.')
+    st.caption('Each car drops a dot for every racing lap. Lap 1, pit-stop laps and the much slower VSC laps are left out.')
 
 
 SLIDES = {'The race at a glance': overview_slide,
@@ -121,6 +121,7 @@ SLIDES = {'The race at a glance': overview_slide,
 def move(step: int) -> None:
     st.session_state.slide = (st.session_state.slide+step) % len(SLIDES)
     st.session_state.direction = 'next' if step > 0 else 'previous'
+    st.query_params['chart'] = str(st.session_state.slide+1)  # Keeps the same chart after a reload.
 
 
 st.set_page_config(page_title='F1 Strategy Visualisation', layout='wide')
@@ -128,11 +129,15 @@ data = load()
 provenance = data['summary']['provenance']
 # The app is configured dark; the browser's own theme is not reliable on the first run.
 mode = 'dark' if st.get_option('theme.base') == 'dark' or st.context.theme.type == 'dark' else 'light'
-st.session_state.setdefault('slide', 0)
+if 'slide' not in st.session_state:
+    chart = st.query_params.get('chart', '1')
+    st.session_state.slide = (int(chart)-1) % len(SLIDES) if chart.isdigit() and int(chart) > 0 else 0
 st.session_state.setdefault('direction', 'next')
 
 race_date = pd.Timestamp(provenance['race_date'])
 st.markdown(theme.STYLE, unsafe_allow_html=True)
+with st.container(key='scroll-keeper'):
+    st.iframe(theme.SCROLL_KEEPER, height=1)
 st.html(theme.hero('Red Bull Ring · ' + f'{race_date.day} {race_date:%B %Y}', '2026 Austrian Grand Prix',
                    'Pace, tyres and pit stops for both drivers from Red Bull Racing, Mercedes and Ferrari'))
 st.caption(

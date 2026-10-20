@@ -69,6 +69,7 @@ STYLE = f'''<style>
 .f1-fact .count {{ --n: var(--target); counter-reset: n var(--n); animation: count 1.4s ease-out var(--delay) both; }}
 .f1-fact .count::after {{ content: counter(n); }}
 
+.st-key-scroll-keeper {{ display: none; }}
 .f1-flag {{ height: 10px; border-radius: 3px; margin: 8px 0;
   background: conic-gradient(#f0efec 25%, #15151e 0 50%, #f0efec 0 75%, #15151e 0) 0 0 / 10px 10px; opacity: .5; }}
 
@@ -165,6 +166,33 @@ def slide_progress(index: int, names: list[str]) -> str:
                    for i, n in enumerate(names))
     return (f'<div class="f1-progress"><span class="kicker">Chart {index+1} / {len(names)}</span>'
             f'<div class="segs" aria-hidden="true">{segs}</div></div>')
+
+
+
+# Runs in a hidden iframe because Streamlit strips scripts from page HTML; the iframe may reach the app page.
+# A fresh visit starts at the top; a reload of the same tab returns to the last scroll position.
+SCROLL_KEEPER = """<script>
+(() => {
+  const app = window.parent, KEY = 'f1-story-scroll';
+  const main = () => app.document.querySelector('[data-testid="stMain"]');
+  const nav = app.performance.getEntriesByType('navigation')[0];
+  const target = nav && nav.type === 'reload' ? Number(app.sessionStorage.getItem(KEY) || 0) : 0;
+  app.history.scrollRestoration = 'manual';
+  let touched = false;
+  for (const e of ['wheel', 'touchstart', 'keydown', 'mousedown']) app.document.addEventListener(e, () => touched = true, {passive: true});
+  const until = Date.now() + 8000, hold = setInterval(() => {  // Content keeps loading, so hold the position until it settles.
+    const m = main();
+    if (m && !touched && m.scrollHeight - m.clientHeight >= target - 2 && Math.abs(m.scrollTop - target) > 2) m.scrollTop = target;
+    if (touched || Date.now() > until) clearInterval(hold);
+  }, 50);
+  let timer;
+  (function save() {
+    const m = main();
+    if (!m) return setTimeout(save, 200);
+    m.addEventListener('scroll', () => { clearTimeout(timer); timer = setTimeout(() => app.sessionStorage.setItem(KEY, m.scrollTop), 150); }, {passive: true});
+  })();
+})();
+</script>"""
 
 
 FLAG = '<div class="f1-flag" aria-hidden="true"></div>'

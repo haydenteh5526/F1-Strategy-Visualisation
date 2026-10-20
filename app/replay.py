@@ -23,7 +23,7 @@ def race_data(laps: pd.DataFrame, mode: str) -> dict:
             'laps': [{'lap': int(r.LapNumber), 'start': float(s), 'end': float(r.TimeSeconds), 'pos': int(r.Position),
                       'compound': r.Compound, 'stint': int(r.Stint), 'pitIn': bool(r.IsPitInLap), 'fresh': bool(r.FreshTyre),
                       'time': float(r.LapTimeSeconds), 'age': int(r.TyreLife), 'normal': bool(r.EligibleForPace),
-                      'pitOrStart': bool(r.IsFirstLap or r.IsPitInLap or r.IsPitOutLap)}
+                      'pitOrStart': bool(r.IsFirstLap or r.IsPitInLap or r.IsPitOutLap), 'vscLap': bool(r.HasVSC)}
                      for r, s in zip(rows.itertuples(), starts)]})
     bands = charts.vsc_bands(laps)
     summary = charts.pace_summary(laps.loc[laps.EligibleForPace]).set_index('Driver')
@@ -95,7 +95,7 @@ function lapFrame(t) {
     s += `<line x1="${xs(lap)}" x2="${xs(lap)}" y1="${M.t}" y2="${plotB}" stroke="${D.grid}"/>`
        + `<text class="axis" x="${xs(lap)}" y="${plotB + 16}" fill="${D.ink}" text-anchor="middle">${lap}</text>`;
   s += `<text class="axis" x="${(M.l + W - M.r) / 2}" y="${H - 2}" fill="${D.ink}" text-anchor="middle" font-weight="700">Lap</text>`;
-  for (const [a, b] of D.vsc)
+  if (KIND !== 'vsc') for (const [a, b] of D.vsc)
     s += `<rect x="${xs(a)}" y="${M.t}" width="${xs(b) - xs(a)}" height="${plotB - M.t}" fill="${D.muted}" opacity=".16"/>`
        + `<text class="axis" x="${xs(a) + 3}" y="${M.t + 12}" fill="${D.muted}">VSC</text>`;
   s += `<line x1="${xs(finish)}" x2="${xs(finish)}" y1="${M.t}" y2="${plotB}" stroke="${D.ink}" stroke-dasharray="3 3" opacity=".6"/>`
@@ -143,10 +143,11 @@ function lapFrame(t) {
       else s += `<text class="label" x="${xs(finish) + 6}" y="${y + 4}" fill="${D.ink}">${d.code}</text>`;
     });
   } else if (KIND === 'vsc') {
-    const pts = D.drivers.map(d => d.laps.filter(l => !l.pitOrStart));
-    const all = pts.flat().map(l => l.time), lo = Math.floor(Math.min(...all)) - 1, hi = Math.ceil(Math.max(...all)) + 1;
+    // Racing laps only: VSC laps, lap 1 and pit laps are left out so the pack fills the chart.
+    const pts = D.drivers.map(d => d.laps.filter(l => !l.pitOrStart && !l.vscLap));
+    const all = pts.flat().map(l => l.time), lo = Math.floor(Math.min(...all)), hi = Math.ceil(Math.max(...all));
     const ys = v => plotB - (v - lo) / (hi - lo) * (plotB - M.t);
-    for (let v = Math.ceil(lo / 5) * 5; v <= hi; v += 5)
+    for (let v = lo; v <= hi; v++)
       s += `<line x1="${M.l}" x2="${W - M.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="${D.grid}"/>`
          + `<text class="axis" x="${M.l - 8}" y="${ys(v) + 4}" fill="${D.ink}" text-anchor="end">${v}</text>`;
     s += yTitle('Lap time (s)', M.t, plotB) + legend(120, 20);

@@ -25,7 +25,8 @@ class StoryAppTests(unittest.TestCase):
         titles = set()
         for slide in range(5):
             self.go_to(slide)
-            charts_shown = len(self.app.get('vega_lite_chart'))+len(self.app.get('iframe'))
+            replays = [f for f in self.app.get('iframe') if 'Race replay' in str(f.proto)]
+            charts_shown = len(self.app.get('vega_lite_chart'))+len(replays)
             self.assertEqual(charts_shown, 1)
             titles.add(self.app.subheader[0].value)
         self.assertEqual(len(titles), 5)
