@@ -16,7 +16,8 @@ COMPOUNDS = ['SOFT', 'MEDIUM', 'HARD']
 COMPOUND_COLORS = ['#e34948', '#eda100', '#898781']
 VSC_FILL = '#898781'
 STATUS_COLUMNS = {'TrackStatus': str, 'EntryTrackStatus': str, 'ExitTrackStatus': str}
-SURFACE = {'light': '#ffffff', 'dark': '#0e1117'}
+SURFACE = {'light': '#ffffff', 'dark': '#15151e'}
+INK = {'light': '#31333f', 'dark': '#f0efec'}
 
 
 
@@ -79,22 +80,37 @@ def shade(bands: pd.DataFrame, label_y: int | None = 0) -> alt.LayerChart:
     return rect+label
 
 
-def stint_timeline(stints: pd.DataFrame, laps: pd.DataFrame) -> alt.LayerChart:
+def stint_timeline(stints: pd.DataFrame, laps: pd.DataFrame, mode: str = 'light') -> alt.LayerChart:
+    """Broadcast-style stint chart: team stripe, tyre icon at each stint start, VSC bands and the finish line."""
     order = driver_order(stints)
+    finish = int(laps.LapNumber.max())
     data = stints.assign(
-        Start=stints.FirstLap-1+.2, End=stints.LastLap-.2, Mid=(stints.FirstLap-1+stints.LastLap)/2,
+        Start=stints.FirstLap-1+.2, End=stints.LastLap-.2, Icon=stints.FirstLap-1+1.4,
         Letter=stints.Compound.str[0], Laps=stints.FirstLap.astype(int).astype(str)+'–'+stints.LastLap.astype(int).astype(str),
         TyreAge=stints.FirstRecordedTyreAge.astype(int).astype(str)+' → '+stints.LastRecordedTyreAge.astype(int).astype(str))
-    y = alt.Y('Driver:N', sort=order, title=None, axis=alt.Axis(labelFontWeight='bold', ticks=False, domain=False))
+    y = alt.Y('Driver:N', sort=order, title=None, scale=alt.Scale(paddingOuter=.8),
+              axis=alt.Axis(labelFontWeight='bold', labelFontSize=12, labelPadding=10, ticks=False, domain=False))
+    x = alt.X('Start:Q', title='Lap', scale=alt.Scale(domain=[-2.4, finish+1], nice=False),
+              axis=alt.Axis(values=list(range(0, finish+1, 5))))
     tooltip = ['Driver', 'Team', alt.Tooltip('Compound', title='Tyre'), alt.Tooltip('Laps', title='Laps'),
                alt.Tooltip('TyreAge', title='Tyre age (laps)')]
+    tyre = alt.Scale(domain=COMPOUNDS, range=COMPOUND_COLORS)
+    stripe = alt.Chart(data.drop_duplicates('Driver')).mark_bar(height={'band': .62}, cornerRadius=2).encode(
+        x=x, x2=alt.datum(-1.2), y=y, color=team_color(list(data.Team.unique()), mode).legend(None),
+        tooltip=['Driver', 'Team']).transform_calculate(Start='-2')
     bars = alt.Chart(data).mark_bar(cornerRadius=4, height={'band': .62}).encode(
-        x=alt.X('Start:Q', title='Lap', scale=alt.Scale(domain=[0, int(laps.LapNumber.max())], nice=False)),
-        x2='End:Q', y=y, color=compound_color(), tooltip=tooltip)
-    letters = alt.Chart(data).mark_text(fontSize=11, fontWeight='bold').encode(
-        x='Mid:Q', y=y, text='Letter:N', tooltip=tooltip,
-        color=alt.condition("datum.Compound == 'MEDIUM'", alt.value('#0b0b0b'), alt.value('#ffffff')))
-    return alt.layer(shade(vsc_bands(laps), label_y=None), bars, letters).properties(height=36*len(order))
+        x=x, x2='End:Q', y=y, color=compound_color(), tooltip=tooltip)
+    icons = alt.Chart(data).mark_point(filled=True, size=260, opacity=1, fill=SURFACE[mode], strokeWidth=3).encode(
+        x=alt.X('Icon:Q', title='Lap'), y=y, stroke=alt.Stroke('Compound:N', scale=tyre, legend=None), tooltip=tooltip)
+    letters = alt.Chart(data).mark_text(fontSize=10, fontWeight='bold', color=INK[mode]).encode(
+        x=alt.X('Icon:Q', title='Lap'), y=y, text='Letter:N', tooltip=tooltip)
+    line = alt.Chart(pd.DataFrame({'Lap': [finish]})).mark_rule(strokeDash=[3, 3], color=INK[mode], opacity=.6).encode(
+        x=alt.X('Lap:Q', title='Lap'))
+    flag = alt.Chart(pd.DataFrame({'Lap': [finish], 'Label': ['FINISH']})).mark_text(
+        align='right', baseline='top', dx=-4, dy=3, fontSize=10, fontWeight='bold', color=INK[mode]).encode(
+        x=alt.X('Lap:Q', title='Lap'), y=alt.value(0), text='Label:N')
+    return alt.layer(shade(vsc_bands(laps)), line, stripe, bars, icons, letters, flag).resolve_scale(
+        color='independent').properties(height=40*len(order))
 
 
 def pace_summary(pace: pd.DataFrame) -> pd.DataFrame:
@@ -120,12 +136,12 @@ def pace_chart(pace: pd.DataFrame, mode: str) -> alt.LayerChart:
     spread = base.mark_bar(height=10, cornerRadius=5, opacity=.35).encode(x=x, x2='High:Q')
     typical = base.mark_point(filled=True, size=170, opacity=1, stroke=SURFACE[mode], strokeWidth=2).encode(
         x=alt.X('Typical:Q', title='Lap time (s)'))
-    labels = alt.Chart(summary).mark_text(align='left', dx=8, fontSize=12).encode(
+    labels = alt.Chart(summary).mark_text(align='left', dx=8, fontSize=12, color=INK[mode]).encode(
         x=alt.X('High:Q', title='Lap time (s)'), y=y, text='Label:N')
     return alt.layer(spread, typical, labels).properties(height=52*len(order))
 
 
-def tyre_age_chart(pace: pd.DataFrame) -> alt.FacetChart:
+def tyre_age_chart(pace: pd.DataFrame, mode: str = 'light') -> alt.FacetChart:
     order = driver_order(pace)
     data = pace.assign(Panel=pace.Driver+' · '+pace.Team, Letter=pace.Compound.str[0])
     panels = sorted(data.Panel.unique(), key=lambda p: order.index(p.split(' · ')[0]))
@@ -136,7 +152,7 @@ def tyre_age_chart(pace: pd.DataFrame) -> alt.FacetChart:
     lines = base.mark_line(strokeWidth=2).encode(color=compound_color())
     ends = base.transform_window(Rank='rank()', sort=[alt.SortField('TyreLife', order='descending')],
                                  groupby=['Panel', 'Stint']).transform_filter('datum.Rank == 1')
-    labels = ends.mark_text(align='left', dx=5, fontSize=11, fontWeight='bold').encode(text='Letter:N')
+    labels = ends.mark_text(align='left', dx=5, fontSize=11, fontWeight='bold', color=INK[mode]).encode(text='Letter:N')
     hover = base.mark_point(size=90, opacity=0).encode(tooltip=[
         'Driver', alt.Tooltip('Compound', title='Tyre'), alt.Tooltip('TyreLife', title='Tyre age (laps)'),
         alt.Tooltip('LapNumber', title='Lap'), alt.Tooltip('LapTimeSeconds', title='Lap time (s)', format='.3f')])
@@ -162,7 +178,7 @@ def position_chart(laps: pd.DataFrame, visits: pd.DataFrame, mode: str) -> alt.L
     hover = alt.Chart(data).mark_point(size=80, opacity=0).encode(
         x=x, y=y, tooltip=['Driver', 'Team', alt.Tooltip('LapNumber', title='Lap'), 'Position'])
     last = data.loc[data.LapNumber.eq(data.LapNumber.max())]
-    labels = alt.Chart(last).mark_text(align='left', dx=6, fontSize=11, fontWeight='bold').encode(
+    labels = alt.Chart(last).mark_text(align='left', dx=6, fontSize=11, fontWeight='bold', color=INK[mode]).encode(
         x=x, y=y, text='Driver:N')
     return alt.layer(shade(vsc_bands(laps), label_y=300), lines, pits, hover, labels).properties(height=300)
 

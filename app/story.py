@@ -7,6 +7,8 @@ import pandas as pd
 import streamlit as st
 
 import charts
+import replay
+import theme
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT/'data/processed/austria-2026'
@@ -67,13 +69,73 @@ def pit_table(visits: pd.DataFrame) -> pd.DataFrame:
     }).sort_values(['In-lap', 'Driver'])
 
 
+def overview_slide() -> None:
+    # Our own HTML built from the prepared data, so it is safe to run as an iframe.
+    st.iframe(replay.html(laps, 'timeline', mode, 52*laps.Driver.nunique()+80), height=52*laps.Driver.nunique()+90)
+    st.caption('Each bar is one stint, starting with its tyre: S (Soft), M (Medium) or H (Hard). '
+               'Gaps between bars are pit stops, grey bands are Virtual Safety Car laps and the stripe shows the team.')
+    st.markdown('##### Strategy by driver')
+    st.dataframe(strategy_table(laps, stints), hide_index=True, width='stretch')
+
+
+def pace_slide() -> None:
+    st.write(f'Compares {len(pace)} normal racing laps. '
+             'Lap 1, pit-stop laps, VSC and yellow-flag laps, and deleted laps are left out.')
+    st.iframe(replay.html(laps, 'pace', mode, 56*laps.Driver.nunique()+80), height=56*laps.Driver.nunique()+90)
+    st.caption("The bar covers the middle half of each driver's normal racing laps and the dot marks their typical lap. "
+               'A shorter bar means more consistent pace.')
+
+
+def tyre_slide() -> None:
+    st.write('Tyre age counts laps on a set, not wear. Cars also get lighter as fuel burns, '
+             'so slower or faster laps are not caused by tyres alone.')
+    panel_rows = -(-laps.Driver.nunique()//2)
+    st.iframe(replay.html(laps, 'tyres', mode, 190*panel_rows+90), height=190*panel_rows+100)
+    st.caption('Each line is one stint, labelled by tyre. Only normal racing laps are shown.')
+
+
+def pit_slide() -> None:
+    st.write('Pit-lane time covers the whole trip through the pit lane, not just the stationary stop.')
+    st.iframe(replay.html(laps, 'positions', mode, 420), height=430)
+    st.caption('Dots mark the lap each driver entered the pits. Team-mates share a colour, '
+               'one solid and one dashed; labels on the right name each driver.')
+    st.markdown('##### Pit stops')
+    st.dataframe(pit_table(visits), hide_index=True, width='stretch')
+
+
+def vsc_slide() -> None:
+    vsc = laps.loc[laps.HasVSC, 'LapNumber']
+    st.write(f'VSC periods affected laps {lap_ranges(vsc)}. These laps are left out of pace comparisons '
+             'but still matter for pit-stop timing.' if len(vsc) else 'No VSC laps for the selected teams.')
+    st.iframe(replay.html(laps, 'vsc', mode, 420), height=430)
+    st.caption('Lap 1 and pit-stop laps are left out, so the jumps inside the grey bands show the VSC slowdown.')
+
+
+SLIDES = {'The race at a glance': overview_slide,
+          '1. Who was fastest in normal racing?': pace_slide,
+          '2. How did lap times change as tyres aged?': tyre_slide,
+          '3. What happened around the pit stops?': pit_slide,
+          '4. How did the Virtual Safety Car change things?': vsc_slide}
+
+
+def move(step: int) -> None:
+    st.session_state.slide = (st.session_state.slide+step) % len(SLIDES)
+    st.session_state.direction = 'next' if step > 0 else 'previous'
+
+
 st.set_page_config(page_title='F1 Strategy Visualisation', layout='wide')
 data = load()
 provenance = data['summary']['provenance']
-mode = 'dark' if st.context.theme.type == 'dark' else 'light'
+# The app is configured dark; the browser's own theme is not reliable on the first run.
+mode = 'dark' if st.get_option('theme.base') == 'dark' or st.context.theme.type == 'dark' else 'light'
+st.session_state.setdefault('slide', 0)
+st.session_state.setdefault('direction', 'next')
 
-st.title('Pace, tyres and pit stops at the 2026 Austrian Grand Prix')
-st.caption('Both drivers from Red Bull Racing, Mercedes and Ferrari. '
+race_date = pd.Timestamp(provenance['race_date'])
+st.markdown(theme.STYLE, unsafe_allow_html=True)
+st.html(theme.hero('Red Bull Ring · ' + f'{race_date.day} {race_date:%B %Y}', '2026 Austrian Grand Prix',
+                   'Pace, tyres and pit stops for both drivers from Red Bull Racing, Mercedes and Ferrari'))
+st.caption(
            f"Data: FastF1 {provenance['fastf1_version']}, accessed {provenance['access_date']}.")
 
 teams = st.multiselect('Teams', TEAMS, default=TEAMS)
@@ -85,45 +147,40 @@ if not teams:
     st.stop()
 pace = laps.loc[laps.EligibleForPace]
 
-st.header('The race at a glance')
-st.altair_chart(charts.stint_timeline(stints, laps), width='stretch')
-st.caption('Each bar is one stint, labelled S (Soft), M (Medium) or H (Hard). '
-           'Gaps between bars are pit stops; grey bands are Virtual Safety Car laps.')
-with st.expander('Strategy details'):
-    st.dataframe(strategy_table(laps, stints), hide_index=True, width='stretch')
-with st.expander('What do these terms mean?'):
-    for term, meaning in GLOSSARY.items():
-        st.markdown(f'**{term}**: {meaning}')
+st.html(theme.fact_cards([('Race laps', int(data['laps'].LapNumber.max())),
+                           ('Drivers compared', int(laps.Driver.nunique())),
+                           ('Pit stops, selected teams', len(visits)),
+                           ('Virtual Safety Car periods', len(charts.vsc_bands(data['laps'])))]))
 
-st.header('1. Who was fastest in normal racing?')
-st.write(f'Compares {len(pace)} normal racing laps. '
-         'Lap 1, pit-stop laps, VSC and yellow-flag laps, and deleted laps are left out.')
-st.altair_chart(charts.pace_chart(pace, mode), width='stretch')
-st.caption("The bar covers the middle half of each driver's normal racing laps and the dot marks their typical lap. "
-           'A shorter bar means more consistent pace.')
+with st.container(border=True, key='chart-frame'):
+    left, middle, right = st.columns([1, 14, 1], vertical_alignment='center')
+    left.button(':material/chevron_left:', key='previous', help='Previous chart', on_click=move, args=(-1,))
+    right.button(':material/chevron_right:', key='next', help='Next chart', on_click=move, args=(1,))
+    title = list(SLIDES)[st.session_state.slide]
+    middle.html(theme.slide_progress(st.session_state.slide, list(SLIDES)))
+    middle.subheader(title)
+    # A new key per slide and direction remounts the content, which replays the slide-in animation.
+    with st.container(key=f'slide-{st.session_state.slide}-{st.session_state.direction}'):
+        SLIDES[title]()
 
-st.header('2. How did lap times change as tyres aged?')
-st.write('Tyre age counts laps on a set, not wear. Cars also get lighter as fuel burns, '
-         'so slower or faster laps are not caused by tyres alone.')
-st.altair_chart(charts.tyre_age_chart(pace))
-st.caption('Each line is one stint, labelled by tyre. Only normal racing laps are shown.')
+st.subheader('Key terms')
+for term, meaning in GLOSSARY.items():
+    st.markdown(f'**{term}**: {meaning}')
 
-st.header('3. What happened around the pit stops?')
-st.write('Pit-lane time covers the whole trip through the pit lane, not just the stationary stop.')
-st.altair_chart(charts.position_chart(laps, visits, mode), width='stretch')
-st.caption('Dots mark the lap each driver entered the pits. Team-mates share a colour, '
-           'one solid and one dashed; labels on the right name each driver.')
-with st.expander('Pit stop details'):
-    st.dataframe(pit_table(visits), hide_index=True, width='stretch')
+st.html(theme.FLAG)
+summary = data['summary']
+st.subheader('About the data')
+st.markdown(f"""
+- **Source:** FastF1 {provenance['fastf1_version']} race timing, accessed {provenance['access_date']}. No telemetry is used.
+- **Laps:** {summary['selected_rows']} laps for the six drivers; {summary['pace_eligible']} count as normal racing laps.
+- **Normal racing laps** leave out lap 1, pit-stop laps, VSC and yellow-flag laps, deleted laps and {summary['accuracy_flagged']} laps that FastF1 flags as possibly inaccurate. No laps are deleted from the data.
+- **Official result:** [Formula 1 race result]({provenance['official_result']}).
+""")
 
-st.header('4. How did the Virtual Safety Car change things?')
-vsc = laps.loc[laps.HasVSC, 'LapNumber']
-st.write(f'VSC periods affected laps {lap_ranges(vsc)}. These laps are left out of pace comparisons '
-         'but still matter for pit-stop timing.' if len(vsc) else 'No VSC laps for the selected teams.')
-st.altair_chart(charts.vsc_chart(laps, mode), width='stretch')
-st.caption('Lap 1 and pit-stop laps are left out, so the jumps inside the grey bands show the VSC slowdown.')
-
-st.divider()
-st.caption('Lap times also depend on fuel load, traffic and conditions, so these views do not prove '
-           'what caused a result or which strategy was best. '
-           f"Official result: {provenance['official_result']}")
+st.subheader('Limits')
+st.markdown("""
+- Lap times also depend on fuel load, traffic, track conditions and tyre age, so these views do not prove what caused a result.
+- Gaps are measured once per lap at the finish line, not live.
+- Pit-lane time is the whole trip through the pit lane, not the stationary stop or the time lost by stopping.
+- This is one race and six drivers; it does not show which strategy was best.
+""")
