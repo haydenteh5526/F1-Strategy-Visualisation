@@ -67,10 +67,6 @@ def pit_table(visits: pd.DataFrame) -> pd.DataFrame:
     }).sort_values(['In-lap', 'Driver'])
 
 
-def roys_part() -> None:
-    st.badge("Roy's part: chart and analysis", icon=':material/bar_chart:', color='blue')
-
-
 st.set_page_config(page_title='F1 Strategy Visualisation', layout='wide')
 data = load()
 provenance = data['summary']['provenance']
@@ -78,8 +74,7 @@ mode = 'dark' if st.context.theme.type == 'dark' else 'light'
 
 st.title('Pace, tyres and pit stops at the 2026 Austrian Grand Prix')
 st.caption('Both drivers from Red Bull Racing, Mercedes and Ferrari. '
-           f"Data: FastF1 {provenance['fastf1_version']}, accessed {provenance['access_date']}. "
-           "Charts are Roy's part; these are prototypes for him to refine.")
+           f"Data: FastF1 {provenance['fastf1_version']}, accessed {provenance['access_date']}.")
 
 teams = st.multiselect('Teams', TEAMS, default=TEAMS)
 laps = data['laps'].loc[data['laps'].Team.isin(teams)]
@@ -91,7 +86,6 @@ if not teams:
 pace = laps.loc[laps.EligibleForPace]
 
 st.header('The race at a glance')
-roys_part()
 st.altair_chart(charts.stint_timeline(stints, laps), width='stretch')
 st.caption('Each bar is one stint, labelled S (Soft), M (Medium) or H (Hard). '
            'Gaps between bars are pit stops; grey bands are Virtual Safety Car laps.')
@@ -104,7 +98,6 @@ with st.expander('What do these terms mean?'):
 st.header('1. Who was fastest in normal racing?')
 st.write(f'Compares {len(pace)} normal racing laps. '
          'Lap 1, pit-stop laps, VSC and yellow-flag laps, and deleted laps are left out.')
-roys_part()
 st.altair_chart(charts.pace_chart(pace, mode), width='stretch')
 st.caption("The bar covers the middle half of each driver's normal racing laps and the dot marks their typical lap. "
            'A shorter bar means more consistent pace.')
@@ -112,13 +105,11 @@ st.caption("The bar covers the middle half of each driver's normal racing laps a
 st.header('2. How did lap times change as tyres aged?')
 st.write('Tyre age counts laps on a set, not wear. Cars also get lighter as fuel burns, '
          'so slower or faster laps are not caused by tyres alone.')
-roys_part()
 st.altair_chart(charts.tyre_age_chart(pace))
 st.caption('Each line is one stint, labelled by tyre. Only normal racing laps are shown.')
 
 st.header('3. What happened around the pit stops?')
 st.write('Pit-lane time covers the whole trip through the pit lane, not just the stationary stop.')
-roys_part()
 st.altair_chart(charts.position_chart(laps, visits, mode), width='stretch')
 st.caption('Dots mark the lap each driver entered the pits. Team-mates share a colour, '
            'one solid and one dashed; labels on the right name each driver.')
@@ -129,7 +120,6 @@ st.header('4. How did the Virtual Safety Car change things?')
 vsc = laps.loc[laps.HasVSC, 'LapNumber']
 st.write(f'VSC periods affected laps {lap_ranges(vsc)}. These laps are left out of pace comparisons '
          'but still matter for pit-stop timing.' if len(vsc) else 'No VSC laps for the selected teams.')
-roys_part()
 st.altair_chart(charts.vsc_chart(laps, mode), width='stretch')
 st.caption('Lap 1 and pit-stop laps are left out, so the jumps inside the grey bands show the VSC slowdown.')
 

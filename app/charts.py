@@ -44,6 +44,17 @@ def compound_color() -> alt.Color:
                      legend=alt.Legend(title='Tyre', orient='top', labelExpr='slice(datum.label, 0, 1) + lower(slice(datum.label, 1))'))
 
 
+def driver_marks(frame: pd.DataFrame, mode: str) -> dict:
+    """Team colour plus a shape per team-mate, sharing one driver legend, so drivers stay identifiable in print."""
+    order = driver_order(frame)
+    teams = frame.drop_duplicates('Driver').set_index('Driver').Team
+    palette = dict(zip(TEAMS, TEAM_COLORS[mode]))
+    legend = alt.Legend(title='Driver', orient='top')
+    return {'color': alt.Color('Driver:N', scale=alt.Scale(domain=order, range=[palette[teams[d]] for d in order]), legend=legend),
+            'shape': alt.Shape('Driver:N', scale=alt.Scale(domain=order, range=['circle', 'triangle-up']*len(TEAMS)),
+                               legend=legend)}
+
+
 def vsc_bands(laps: pd.DataFrame) -> pd.DataFrame:
     """Contiguous VSC-affected laps as [start, end] lap spans for shading."""
     numbers = sorted(int(n) for n in laps.loc[laps.HasVSC, 'LapNumber'].unique())
@@ -160,10 +171,10 @@ def vsc_chart(laps: pd.DataFrame, mode: str) -> alt.LayerChart:
     # Lap 1 and pit laps are left out so the VSC effect is not mixed with standing starts or stops.
     data = laps.loc[~(laps.IsFirstLap | laps.IsPitInLap | laps.IsPitOutLap)].assign(
         Phase=lambda d: d.HasVSC.map({True: 'VSC lap', False: 'Other lap'}))
-    dots = alt.Chart(data).mark_circle(size=64, opacity=.85, stroke=SURFACE[mode], strokeWidth=1).encode(
+    dots = alt.Chart(data).mark_point(filled=True, size=70, opacity=.9, stroke=SURFACE[mode], strokeWidth=1).encode(
         x=alt.X('LapNumber:Q', title='Lap', scale=alt.Scale(domain=[1, int(laps.LapNumber.max())], nice=False)),
         y=alt.Y('LapTimeSeconds:Q', title='Lap time (s)', scale=alt.Scale(zero=False)),
-        color=team_color(list(laps.Team.unique()), mode),
+        **driver_marks(data, mode),
         tooltip=['Driver', alt.Tooltip('LapNumber', title='Lap'), alt.Tooltip('LapTimeSeconds', title='Lap time (s)', format='.3f'),
                  alt.Tooltip('Phase', title='Lap type')])
     return alt.layer(shade(vsc_bands(laps)), dots).properties(height=260)
