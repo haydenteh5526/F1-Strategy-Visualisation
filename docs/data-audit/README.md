@@ -76,9 +76,9 @@ The selected-lap file retains all 426 records. Separate pace and flagged files s
 
 ## Assumptions and limitations
 
-The derived gap compares completion times for the same lap against the earliest full-field completion. Label it as a lap-boundary interval. The loader warned about alignment for driver 77, outside the selected teams, and a 0.530-second session-end discrepancy for driver 63. Investigate effects before using field-reference gaps in final charts. Complete fields do not prove every value is correct.
+The derived gap compares completion times for the same lap against the earliest eligible field completion. Label it as a lap-boundary interval. Excluding unaligned driver 77 leaves all selected intervals unchanged. Driver 63's 0.530-second warning compares a finish timestamp with a later session-status message; it is not a correction to apply. Selected finishing intervals match the published classification. Complete fields do not prove every intermediate value is correct. See the [timing investigation](../timing-validation/README.md) for evidence and limitations.
 
-Fuel load, traffic, weather and track evolution remain confounders. The pace rule is a starting point; stint phase and compound need further checks. Offline reprocessing and three regression tests passed. Human review by Roy and exploratory analysis remain pending.
+Fuel load, traffic, weather and track evolution remain confounders. The pace rule is a starting point; stint phase and compound need further checks. Offline reprocessing and 22 tests passed. Human review by Roy and exploratory analysis remain pending.
 
 ## Reproduction and sources
 

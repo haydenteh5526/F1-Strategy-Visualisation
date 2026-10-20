@@ -1,0 +1,18 @@
+{
+  "event": "Austrian Grand Prix 2026",
+  "sources": [
+    "https://www.formula1.com/en/results/2026/races/1288/austria/race-result",
+    "https://api.fia.com/news/f1-russell-wins-closely-contested-austrian-grand-prix-ahead-verstappen-and-antonelli"
+  ],
+  "method": "Manually transcribed from the independently published classification; not derived from the retained FastF1 results.csv.",
+  "winner": "RUS",
+  "winner_race_seconds": 5197.979,
+  "selected_drivers": {
+    "RUS": {"position": 1, "laps": 71, "gap_seconds": 0.0},
+    "VER": {"position": 2, "laps": 71, "gap_seconds": 1.611},
+    "ANT": {"position": 3, "laps": 71, "gap_seconds": 1.986},
+    "HAM": {"position": 5, "laps": 71, "gap_seconds": 26.393},
+    "HAD": {"position": 6, "laps": 71, "gap_seconds": 29.399},
+    "LEC": {"position": 8, "laps": 71, "gap_seconds": 45.659}
+  }
+}

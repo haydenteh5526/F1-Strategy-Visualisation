@@ -15,6 +15,31 @@ TEAMS = ['Red Bull Racing', 'Mercedes', 'Ferrari']
 TIME_FIELDS = ['Time', 'LapTime', 'LapStartTime', 'PitInTime', 'PitOutTime',
                'Sector1Time', 'Sector2Time', 'Sector3Time']
 CORE = ['LapTime', 'Compound', 'TyreLife', 'Position', 'Time', 'Stint']
+REFERENCE_EXCLUSIONS = ('77',)  # Unaligned early retiree in this retained race snapshot.
+
+
+def lap_boundary_intervals(field, selected, excluded_drivers=REFERENCE_EXCLUSIONS):
+    """Compare completion times for the same lap; never interpolate live gaps."""
+    references = field.loc[~field.DriverNumber.astype(str).isin(excluded_drivers)].copy()
+    if references.duplicated(['DriverNumber', 'LapNumber']).any():
+        raise ValueError('Duplicate reference driver-lap keys')
+    times = references.Time.dt.total_seconds()
+    selected_times = selected.Time.dt.total_seconds()
+    if not np.isfinite(times).all() or not np.isfinite(selected_times).all():
+        raise ValueError('Missing or non-finite completion timestamps')
+    if references.LapNumber.isna().any() or selected.LapNumber.isna().any():
+        raise ValueError('Missing lap numbers')
+    references = references.assign(CompletionSeconds=times).reset_index(drop=True)
+    earliest_rows = references.loc[references.groupby('LapNumber').CompletionSeconds.idxmin()]
+    if not earliest_rows.Position.eq(1).all():
+        raise ValueError('Earliest completion reference disagrees with race position')
+    earliest = earliest_rows.set_index('LapNumber').CompletionSeconds
+    gaps = selected_times-selected.LapNumber.map(earliest)
+    if not np.isfinite(gaps).all():
+        raise ValueError('Missing reference for a selected lap')
+    if gaps.lt(-.003).any():
+        raise ValueError('Selected completion precedes the reference')
+    return gaps
 
 
 def prepare(laps: pd.DataFrame) -> pd.DataFrame:
@@ -118,6 +143,7 @@ def main() -> None:
         session.race_control_messages.to_csv(raw/'race_control_messages.csv', index=False)
         session.weather_data.to_csv(raw/'weather.csv', index=False)
         session.results.to_csv(raw/'results.csv', index=False)
+        session.session_status.to_csv(raw/'session_status.csv', index=False)
         provenance = {'event':'Austrian Grand Prix', 'year':2026,'session':'Race',
             'race_date':'2026-06-28','access_date':args.access_date or pd.Timestamp.now(tz='UTC').date().isoformat(),
             'fastf1_version':fastf1.__version__,'pandas_version':pd.__version__,
@@ -132,10 +158,7 @@ def main() -> None:
     validate(x, field, visits)
     # Same completed lap for every driver, compared with the full-field earliest completion.
     # This is a lap-boundary interval, not an instantaneous/live race gap.
-    field_times = field.assign(TimeSeconds=field.Time.dt.total_seconds())
-    earliest = field_times.groupby('LapNumber').TimeSeconds.min()
-    x['GapToEarliestLapCompletionSeconds'] = x.TimeSeconds-x.LapNumber.map(earliest)
-    if x.GapToEarliestLapCompletionSeconds.lt(-.003).any(): raise ValueError('Negative reference gap')
+    x['GapToEarliestLapCompletionSeconds'] = lap_boundary_intervals(field, x)
     columns = ['Driver','DriverNumber','Team','LapNumber','Stint','Compound','TyreLife','FreshTyre',
                'Position','TrackStatus','IsAccurate','FastF1Generated','Deleted']
     columns += [name+'Seconds' for name in TIME_FIELDS]
