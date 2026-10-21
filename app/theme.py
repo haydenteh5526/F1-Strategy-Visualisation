@@ -70,6 +70,17 @@ STYLE = f'''<style>
 .f1-fact .count::after {{ content: counter(n); }}
 
 .st-key-scroll-keeper {{ display: none; }}
+.f1-takeaway {{ margin: 6px 0 14px; padding: 16px 20px; border-left: 6px solid {RED}; border-radius: 6px;
+  background: linear-gradient(90deg, #2a1416, #1f1f2b 60%); font-family: 'Titillium Web', system-ui, sans-serif; color: #f0efec;
+  animation: rise .5s ease-out both; }}
+.f1-takeaway .kicker {{ font-size: 12px; font-weight: 700; letter-spacing: .2em; color: {RED}; text-transform: uppercase; }}
+.f1-takeaway .big {{ font-size: clamp(19px, 2.2vw, 26px); font-weight: 700; line-height: 1.3; margin-top: 4px; }}
+.f1-guide {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 14px;
+  font-family: 'Titillium Web', system-ui, sans-serif; color: #f0efec; }}
+.f1-guide > div {{ background: #1b1b25; border-radius: 6px; padding: 12px 16px; }}
+.f1-guide h4 {{ margin: 0 0 6px; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #c3c2b7; }}
+.f1-guide ul {{ margin: 0; padding-left: 18px; font-size: 15px; line-height: 1.5; }}
+.f1-guide li b {{ color: #fff; }}
 .f1-flag {{ height: 10px; border-radius: 3px; margin: 8px 0;
   background: conic-gradient(#f0efec 25%, #15151e 0 50%, #f0efec 0 75%, #15151e 0) 0 0 / 10px 10px; opacity: .5; }}
 
@@ -193,6 +204,14 @@ SCROLL_KEEPER = """<script>
   })();
 })();
 </script>"""
+
+
+def guide(takeaway: str, read: list[str], notice: list[str]) -> str:
+    """Plain-English box for a slide: the one-sentence takeaway, how to read the chart and what to notice."""
+    items = lambda lines: ''.join(f'<li>{line}</li>' for line in lines)  # Lines may carry <b> tags; callers escape data.
+    return (f'<div class="f1-takeaway"><div class="kicker">Key takeaway</div><div class="big">{takeaway}</div></div>'
+            f'<div class="f1-guide"><div><h4>How to read this</h4><ul>{items(read)}</ul></div>'
+            f'<div><h4>What to notice</h4><ul>{items(notice)}</ul></div></div>')
 
 
 FLAG = '<div class="f1-flag" aria-hidden="true"></div>'

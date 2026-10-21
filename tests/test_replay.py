@@ -79,7 +79,7 @@ class ReplayRenderTests(unittest.TestCase):
         drawn = render(self.page('event', 800))
         self.assertIn('HAD lap 25: 100.460 s', drawn)
         self.assertNotIn('HAD lap 1: ', drawn)
-        for title in ['VSC 1 · laps 23–27', 'VSC 2 · laps 51–54', 'DEPLOYED', 'ENDING', 'CLEAR',
+        for title in ['VSC 1 (cars must slow down) · laps 23–27', 'VSC 2 (cars must slow down) · laps 51–54', 'DEPLOYED', 'ENDING', 'CLEAR',
                       'HAM has no non-pit lap-time observation in VSC 1']:
             self.assertIn(title, drawn)
 
@@ -95,10 +95,11 @@ class ReplayRenderTests(unittest.TestCase):
     def test_pit_clock_separates_overlap_from_flagged_laps(self):
         drawn = render(self.page('pitclock'))
         self.assertIn('HAM lap 25: pit lane', drawn)
-        self.assertIn('overlaps VSC for 21.2 s', drawn)
-        self.assertEqual(drawn.count('near-boundary case'), 1)
-        self.assertEqual(drawn.count('lap flagged, but the stop is outside the VSC'), 1)
+        self.assertIn('STOPPED DURING THE VSC · 21.2 s of it', drawn)
+        self.assertEqual(drawn.count('TOO CLOSE TO CALL'), 1)
+        self.assertEqual(drawn.count('flagged lap · stop was outside the VSC'), 1)
         self.assertIn('All 14 pit visits across the race', drawn)
+        self.assertEqual(drawn.count('(cars must slow down)'), 2)
 
     def test_positions_change_only_when_a_lap_is_completed(self):
         page = self.page('positions', 420)
@@ -109,6 +110,11 @@ class ReplayRenderTests(unittest.TestCase):
             for lap in [10, 24, 51]:
                 held = evaluate(page, f'[{lap}.01, {lap}.5, {lap}.99].map(p => posAt(D.drivers[{i}], p))')
                 self.assertEqual(held, [int(recorded[lap])]*3, (driver, lap))
+
+    def test_event_view_marks_a_normal_lap_and_the_slowest_lap(self):
+        drawn = render(self.page('event', 800))
+        self.assertEqual(drawn.count('a normal lap ≈'), 2)
+        self.assertIn('slowest lap: HAD lap 25, 100.5 s', drawn)
 
     def test_pace_view_shows_sample_counts_and_teammate_shapes(self):
         drawn = render(self.page('pace', 400))

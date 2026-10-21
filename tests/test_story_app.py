@@ -78,6 +78,25 @@ class StoryAppTests(unittest.TestCase):
         self.assertIn('requires the recorded event clock', message)
         self.assertTrue(any('3 have a VSC flag on the entry or exit lap, but 1 overlap' in m.value for m in self.app.markdown))
 
+    def test_every_slide_explains_itself_in_plain_english(self):
+        for slide in range(6):
+            self.go_to(slide)
+            boxes = [h.proto.body for h in self.app.get('html') if 'f1-takeaway' in h.proto.body]
+            self.assertEqual(len(boxes), 1, slide)
+            self.assertIn('How to read this', boxes[0])
+            self.assertIn('What to notice', boxes[0])
+
+    def test_takeaways_state_the_numbers_in_the_data(self):
+        def takeaway():
+            body = next(h.proto.body for h in self.app.get('html') if 'f1-takeaway' in h.proto.body)
+            return body.split('class="big">')[1].split('</div>')[0]
+        self.go_to(1)
+        self.assertIn('ANT was quickest (71.64 s)', takeaway())
+        self.go_to(3)
+        self.assertIn('only 1 (HAM on lap 25)', takeaway())
+        self.go_to(4)
+        self.assertIn("HAD's lap 25 at 100.5 s", takeaway())
+
     def test_vsc_laps_are_summarised(self):
         self.go_to(4)
         self.assertTrue(any('laps 24–26, 52–53' in text.value for text in self.app.markdown))
