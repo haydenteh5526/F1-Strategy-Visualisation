@@ -39,7 +39,7 @@ The existing `app/story.py`, theme, replay and static exports cover the prototyp
 | Ask teammates/F1 fans to explain the charts and record responses | **Pending** | Collect real responses using the [feedback form](audience-feedback/README.md) and [session template](audience-feedback/SESSION_TEMPLATE.md) |
 | Save prototype, feedback notes and alternatives for rationale | **Partly complete** | Prototype and rationale are present; completed feedback records and resulting revisions await sessions |
 
-Roy confirmed that no audience feedback has been collected. Do not check these requirements off or close #8 until actual anonymous responses and resulting design decisions are recorded. Automated tests and assistant inspection do not count as audience feedback.
+No audience feedback has been collected. Do not check these requirements off or close #8 until actual anonymous responses and resulting design decisions are recorded. Automated validation does not establish audience understanding.
 
 ## Validation and review boundary
 

@@ -43,6 +43,6 @@ Test whether viewers can distinguish a used tyre's age from the length of its cu
 
 ## Evidence and remaining work
 
-Automated tests check chart values, source counts, driver separation, recorded VSC clock behaviour, rendering, filters and slide navigation. They do not establish text readability on a projector, navigation discoverability or audience understanding. Existing images received assistant visual inspection; that is not a human audience session.
+Automated tests check chart values, source counts, driver separation, recorded VSC clock behaviour, rendering, filters and slide navigation. They do not establish text readability on a projector, navigation discoverability or audience understanding.
 
 No audience sessions have been collected as of this review. For each session, record the exact build or static file shown, anonymous responses, time to main point, confusing elements and interpretation errors. Link each actual design decision to its response evidence and rerun the relevant checks after changing code or exports. Record a reason when a suggestion is declined or deferred. Keep issue #8 open until the response records and resulting decisions exist.
