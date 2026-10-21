@@ -115,6 +115,8 @@ def stint_timeline(stints: pd.DataFrame, laps: pd.DataFrame, mode: str = 'light'
 
 def pace_summary(pace: pd.DataFrame) -> pd.DataFrame:
     """Typical (median) lap and the middle half of each driver's normal racing laps."""
+    if pace.empty:
+        return pd.DataFrame(columns=['Team', 'Driver', 'Typical', 'Low', 'High', 'Laps', 'Label'])
     times = pace.groupby(['Team', 'Driver']).LapTimeSeconds
     return pd.DataFrame({'Typical': times.median(), 'Low': times.quantile(.25), 'High': times.quantile(.75),
                          'Laps': times.size()}).reset_index().assign(

@@ -1,6 +1,7 @@
 """Check the data each replay car drives on, and what the replay actually draws."""
 from pathlib import Path
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -43,7 +44,7 @@ class ReplayDataTests(unittest.TestCase):
 NODE = r"""
 const vm = require('vm'); let src = '';
 process.stdin.on('data', chunk => src += chunk).on('end', () => {
-  const svg = {clientWidth: 1000, innerHTML: ''};
+  const svg = {clientWidth: Number(process.env.WIDTH || 1240), innerHTML: '', style: {}};
   const context = vm.createContext({document: {getElementById: id => id === 'chart' ? svg : {classList: {}}}, console,
                                     matchMedia: () => ({matches: true}), requestAnimationFrame: () => {}, addEventListener: () => {}});
   vm.runInContext(src, context);  // Reduced motion, so this draws the finished race.
@@ -55,19 +56,20 @@ process.stdin.on('data', chunk => src += chunk).on('end', () => {
 """
 
 
-def run_node(page: str, *args: str) -> str:
+def run_node(page: str, *args: str, width: int = 1240) -> str:
     script = re.search(r'<script>(.*)</script>', page, re.S).group(1)
-    return subprocess.run(['node', '-e', NODE, *args], input=script, capture_output=True, text=True, check=True).stdout
+    return subprocess.run(['node', '-e', NODE, *args], input=script, capture_output=True, text=True, check=True,
+                          env={**os.environ, 'WIDTH': str(width)}).stdout
 
 
-def render(page: str, at: float | None = None) -> str:
+def render(page: str, at: float | None = None, width: int = 1240) -> str:
     """Run the replay's own drawing script and return the SVG, at the end of the race or at a session time (seconds)."""
-    return run_node(page, 'end' if at is None else str(at))
+    return run_node(page, 'end' if at is None else str(at), width=width)
 
 
-def evaluate(page: str, expression: str):
+def evaluate(page: str, expression: str, width: int = 1240):
     """Evaluate a JavaScript expression inside the replay's own script and return its JSON value."""
-    return json.loads(run_node(page, 'eval', expression))
+    return json.loads(run_node(page, 'eval', expression, width=width))
 
 
 @unittest.skipUnless(shutil.which('node'), 'needs Node.js to run the replay script')
@@ -79,7 +81,7 @@ class ReplayRenderTests(unittest.TestCase):
 
     def test_event_view_draws_the_affected_laps_and_both_windows(self):
         drawn = render(self.page('event', 800))
-        self.assertIn('HAD, lap 25: 100.460 s', drawn)
+        self.assertIn('HAD, lap 25 (affected by the VSC): 100.460 s', drawn)
         self.assertNotIn('HAD, lap 1: ', drawn)
         for title in ['VSC 1: laps 23 to 27', 'VSC 2: laps 51 to 54', 'VSC starts', 'VSC ending', 'racing again',
                       'HAM has no lap-time dot in VSC 1']:
@@ -99,7 +101,8 @@ class ReplayRenderTests(unittest.TestCase):
         self.assertIn('HAM, lap 25: in the pit lane from', drawn)
         self.assertIn('IN THE PIT LANE DURING THE VSC · 21.2 s', drawn)
         self.assertEqual(drawn.count('LEFT THE PIT LANE 0.132 s BEFORE THE VSC · TOO CLOSE TO CALL'), 1)
-        self.assertEqual(drawn.count('no pit stop in this window'), 9)   # Six drivers: 3 visits across two panels leave 9 empty rows.
+        # Six drivers in two panels leave 9 empty rows; the note is left out of a row where a badge has been placed.
+        self.assertTrue(6 <= drawn.count('no pit stop in this window') <= 9)
         self.assertEqual(drawn.count('TOO CLOSE TO CALL'), 1)
         self.assertEqual(drawn.count('flagged lap · ended 49.0 s before the VSC'), 1)
         self.assertIn('All 14 pit-lane visits across the race', drawn)
@@ -118,7 +121,8 @@ class ReplayRenderTests(unittest.TestCase):
     def test_event_view_marks_a_normal_lap_and_the_slowest_lap(self):
         drawn = render(self.page('event', 800))
         self.assertEqual(drawn.count('a typical normal racing lap ≈ 71.8 s (median of all 361 normal laps)'), 1)
-        self.assertIn('slowest lap here: HAD lap 25, 100.5 s', drawn)
+        self.assertRegex(drawn, r'>slowest: HAD (lap 25 · )?100\.5 s<')
+        self.assertRegex(drawn, r'>slowest: LEC (lap 52 · )?82\.0 s<')
 
     def test_event_views_are_static_and_say_so(self):
         for kind in ['pitclock', 'event']:
@@ -174,6 +178,53 @@ class ReplayRenderTests(unittest.TestCase):
     def test_the_normal_lap_line_is_the_median_of_all_normal_racing_laps(self):
         normal = evaluate(self.page('event', 800), 'D.normalLap')
         self.assertAlmostEqual(normal, self.laps[self.laps.EligibleForPace].LapTimeSeconds.median(), places=6)
+
+    def test_callouts_stay_inside_their_panels_and_clear_of_each_other(self):
+        for width in [420, 700, 1000, 1240]:
+            for kind, expected in [('pitclock', 3), ('event', 2)]:
+                with self.subTest(width=width, kind=kind):
+                    page = self.page(kind, 800)
+                    boxes = evaluate(page, 'BOXES', width=width)
+                    self.assertEqual(len(boxes), expected)
+                    for box in boxes:
+                        b = box['bounds']
+                        self.assertGreaterEqual(box['x'], b['x0']); self.assertLessEqual(box['x'] + box['w'], b['x1'] + 1e-6)
+                        self.assertGreaterEqual(box['y'], b['y0']); self.assertLessEqual(box['y'] + box['h'], b['y1'] + 1e-6)
+                    for i, a in enumerate(boxes):
+                        for c in boxes[i + 1:]:
+                            if a['panel'] == c['panel']:
+                                apart = (a['x'] + a['w'] <= c['x'] or c['x'] + c['w'] <= a['x'] or a['y'] + a['h'] <= c['y'] or c['y'] + c['h'] <= a['y'])
+                                self.assertTrue(apart, (a, c))
+                    if kind == 'event' and width >= 700:   # No callout covers another lap's dot.
+                        points = evaluate(page, 'POINTS', width=width)
+                        for box in boxes:
+                            for p in points:
+                                if p['panel'] == box['panel'] and (p['code'], p['lap']) != (box['anchor']['code'], box['anchor']['lap']):
+                                    covered = box['x'] - 3 <= p['x'] <= box['x'] + box['w'] + 3 and box['y'] - 3 <= p['y'] <= box['y'] + box['h'] + 3
+                                    self.assertFalse(covered, (box, p))
+
+    def test_panels_stack_and_the_frame_grows_on_a_narrow_screen(self):
+        for kind in ['pitclock', 'event']:
+            heights = {w: float(evaluate(self.page(kind, 800), 'svg.style.height', width=w).strip('"').replace('px', '')) for w in (420, 700, 1240)}
+            self.assertGreater(heights[700], heights[1240], kind)
+            self.assertGreater(heights[420], heights[1240], kind)
+
+    def test_every_affected_lap_carries_an_amber_ring(self):
+        drawn = render(self.page('event', 800))
+        events = evaluate(self.page('event', 800), 'D.events')
+        points = [p for e in events for s in e['series'] for p in s['points']]
+        affected = [p for p in points if p['vscLap']]
+        self.assertEqual(len(affected), 25)
+        # Lap-time row leaves pit laps out; the position and gap rows keep every lap.
+        expected = sum(1 for p in affected if p['time'] is not None) + 2*len(affected)
+        self.assertEqual(drawn.count('class="affected"'), expected)
+
+    def test_no_reference_line_when_there_are_no_normal_racing_laps(self):
+        none_eligible = self.laps.assign(EligibleForPace=False)
+        drawn = render(replay.html(none_eligible, 'event', 'dark', 800))
+        self.assertIn('no normal racing laps for this selection', drawn)
+        self.assertNotIn('typical normal racing lap', drawn)
+        self.assertIsNone(evaluate(replay.html(none_eligible, 'event', 'dark', 800), 'D.normalLap'))
 
     def test_pace_view_shows_sample_counts_and_teammate_shapes(self):
         drawn = render(self.page('pace', 400))

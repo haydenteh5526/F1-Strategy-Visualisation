@@ -170,15 +170,19 @@ def event_slide() -> None:
     window = pd.concat([laps[laps.LapNumber.between(c['before'], c['after'])] for c in clock]) if clock else laps.iloc[0:0]
     valid = window[~(window.IsFirstLap | window.IsPitInLap | window.IsPitOutLap)]
     if len(valid):
-        slowest, normal = valid.loc[valid.LapTimeSeconds.idxmax()], pace.LapTimeSeconds.median()
+        slowest = valid.loc[valid.LapTimeSeconds.idxmax()]
         text = (f"When the VSC began, lap times jumped: the slowest lap was {slowest.Driver}'s lap {int(slowest.LapNumber)} at "
-                f'{slowest.LapTimeSeconds:.1f} s, against about {normal:.0f} s for a typical normal racing lap.')
+                f'{slowest.LapTimeSeconds:.1f} s')
+        text += (f', against about {pace.LapTimeSeconds.median():.0f} s for a typical normal racing lap.' if len(pace)
+                 else '. There are no normal racing laps in this selection to compare it with.')
     else:
         text = 'No VSC laps for the selected teams.'
     explain(text, ['There is one set of panels for each VSC. The clock shows seconds since that VSC started (<b>0 s</b>), so left of 0 is before it.',
                    'Top row: lap times. Middle row: race position (1 = leading). Bottom row: seconds behind the first car to finish that lap.',
-                   'Each dot is one lap finished by one car. A <b>hollow dot</b> is a lap that included a pit stop.'],
-            ['The laps inside the yellow zone are far slower than the dashed line, which marks a typical normal racing lap of the whole race.',
+                   'Each dot is one lap, placed at the moment its car <b>finished</b> that lap. A <b>hollow dot</b> is a lap that included a pit stop.',
+                   'An <b>amber ring</b> marks a lap the VSC affected.'],
+            ['The amber-ringed laps are far slower than the dashed line, which marks a typical normal racing lap of the whole race.',
+             'The yellow zone shows the VSC status at that moment on the clock. A ringed lap can finish after the zone ends, because it was run partly under the VSC.',
              'Positions and gaps also move because cars were pitting at the same time. This shows what happened, not what the VSC caused.'])
     vsc = laps.loc[laps.HasVSC, 'LapNumber']
     st.write(f'VSC periods affected laps {lap_ranges(vsc)}. These laps are left out of pace comparisons but belong in the event '
