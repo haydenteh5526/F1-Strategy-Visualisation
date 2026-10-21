@@ -95,7 +95,8 @@ class ReplayRenderTests(unittest.TestCase):
     def test_pit_clock_separates_overlap_from_flagged_laps(self):
         drawn = render(self.page('pitclock'))
         self.assertIn('HAM lap 25: pit lane', drawn)
-        self.assertIn('STOPPED DURING THE VSC · 21.2 s of it', drawn)
+        self.assertIn('IN THE PIT LANE DURING THE VSC · 21.2 s', drawn)
+        self.assertEqual(drawn.count('no pit stop in this window'), 9)   # Six drivers: 3 visits across two panels leave 9 empty rows.
         self.assertEqual(drawn.count('TOO CLOSE TO CALL'), 1)
         self.assertEqual(drawn.count('flagged lap · stop was outside the VSC'), 1)
         self.assertIn('All 14 pit visits across the race', drawn)

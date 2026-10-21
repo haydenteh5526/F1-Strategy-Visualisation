@@ -290,7 +290,7 @@ function phases(c, xs, top, bottom, labels) {  // Deployed and ending phases of 
 }
 
 function badge(v) {  // A stop's relation to the VSC, as words, colour and a symbol.
-  if (v.overlap > 0) return {text: `✔ STOPPED DURING THE VSC · ${v.overlap.toFixed(1)} s of it`, fill: '#e10600', ink: '#ffffff'};
+  if (v.overlap > 0) return {text: `✔ IN THE PIT LANE DURING THE VSC · ${v.overlap.toFixed(1)} s`, fill: '#e10600', ink: '#ffffff'};
   if (v.near) return {text: `⚠ ${v.nearest.toFixed(3)} s FROM THE VSC · TOO CLOSE TO CALL`, fill: D.vscColor, ink: '#15151e'};
   if (v.whole) return {text: 'flagged lap · stop was outside the VSC', fill: '#5a5a64', ink: '#ffffff'};
   return null;
@@ -315,7 +315,11 @@ function pitFrame(t) {  // Pit-lane spans against the recorded VSC clock; cars d
     for (let v = Math.ceil(lo / 50) * 50; v <= hi; v += 50)
       s += `<text class="axis" x="${xs(v)}" y="${bottom + 16}" fill="${D.ink}" text-anchor="middle">${v}</text>`;
     s += `<text class="axis" x="${ox + (hi - lo) * unit / 2}" y="${bottom + 32}" fill="${D.ink}" text-anchor="middle" font-weight="700">Seconds from VSC deployment</text>`
-       + `<line x1="${xs(cx)}" x2="${xs(cx)}" y1="${M.t}" y2="${bottom}" stroke="${D.ink}" opacity=".5"/>`;
+       + (k < 1 ? `<line x1="${xs(cx)}" x2="${xs(cx)}" y1="${M.t}" y2="${bottom}" stroke="${D.ink}" opacity=".5"/>` : '');
+    D.drivers.forEach((d, i) => {  // Say so when a driver made no pit stop here, so an empty row is not read as missing data.
+      if (D.pits.some(v => v.driver === d.code && v.exit - c.start >= lo && v.entry - c.start <= hi)) return;
+      s += `<text class="axis" x="${xs(lo) + 8}" y="${M.t + row * (i + .5) + 4}" fill="${D.ink}" opacity=".4" font-style="italic">no pit stop in this window</text>`;
+    });
     D.pits.forEach(v => {
       const e0 = v.entry - c.start, e1 = v.exit - c.start, d = teamOf(v.driver), i = D.drivers.indexOf(d);
       if (e1 < lo || e0 > hi || e0 > cx) return;
@@ -345,11 +349,11 @@ function pitFrame(t) {  // Pit-lane spans against the recorded VSC clock; cars d
   D.pits.forEach(v => {
     const m = (v.entry - D.t0) / 60, d = teamOf(v.driver), y = oTop + oRow * (D.drivers.indexOf(d) + .5);
     const b = badge(v);
-    if (m <= k * oMin) s += `<rect x="${ovx(m)}" y="${y - 5}" width="${Math.max(3, ovx(v.elapsed / 60) - ovx(0))}" height="10" rx="3" fill="${d.color}" opacity="${b ? 1 : .45}" stroke="${b ? b.fill : 'none'}" stroke-width="${b ? 2.5 : 0}"><title>${v.driver} lap ${v.entryLap}: ${v.elapsed.toFixed(1)} s in pit lane</title></rect>`;
+    if (m <= k * oMin) s += `<rect x="${ovx(m)}" y="${y - 6}" width="${Math.max(7, ovx(v.elapsed / 60) - ovx(0))}" height="12" rx="4" fill="${d.color}" opacity="${b ? 1 : .6}" stroke="${b ? b.fill : 'none'}" stroke-width="${b ? 2.5 : 0}"><title>${v.driver} lap ${v.entryLap}: ${v.elapsed.toFixed(1)} s in pit lane</title></rect>`;
   });
   for (let m = 0; m <= oMin; m += 20) s += `<text class="axis" x="${ovx(m)}" y="${oBottom + 16}" fill="${D.ink}" text-anchor="middle">${m}</text>`;
   s += `<text class="axis" x="${M.l + oW / 2}" y="${oBottom + 32}" fill="${D.ink}" text-anchor="middle" font-weight="700">Minutes from the first lap start</text>`
-     + `<line x1="${ovx(k * oMin)}" x2="${ovx(k * oMin)}" y1="${oTop}" y2="${oBottom}" stroke="${D.ink}" opacity=".5"/>`;
+     + (k < 1 ? `<line x1="${ovx(k * oMin)}" x2="${ovx(k * oMin)}" y1="${oTop}" y2="${oBottom}" stroke="${D.ink}" opacity=".5"/>` : '');
   svg.innerHTML = s;
 }
 
@@ -359,9 +363,10 @@ function eventFrame(t) {  // Lap time, position and same-lap interval around eac
   const notes = ev.flatMap(e => e.notes), M = {l: 70, r: 20, t: 62}, gap = 46, rowGap = 28, noteH = 18 * notes.length + 8;
   const pw = (W - M.l - M.r - gap * (ev.length - 1)) / ev.length, ph = (H - M.t - 40 - noteH - rowGap * 2) / 3;
   const allPts = ev.flatMap(e => e.series.flatMap(q => q.points));
+  const times = allPts.filter(p => p.time !== null).map(p => p.time), timeLo = Math.floor(Math.min(...times)) - 1, timeHi = Math.ceil(Math.max(...times)) + 1;
   const maxPos = Math.max(...allPts.map(p => p.pos)), maxGap = Math.ceil(Math.max(...allPts.map(p => p.gap)) / 10) * 10;
-  const rows = [{title: 'Lap time (s)', f: p => p.time, skipPit: true},
-                {title: 'Position', f: p => p.pos, lo: 1, hi: maxPos, flip: true, step: 2},
+  const rows = [{title: 'Lap time (s)', f: p => p.time, skipPit: true, lo: timeLo, hi: timeHi, step: 5},
+                {title: 'Position', f: p => p.pos, lo: 1, hi: maxPos, flip: true, step: maxPos <= 8 ? 1 : 2},
                 {title: 'Interval to first finisher (s)', f: p => p.gap, lo: 0, hi: maxGap, flip: true, step: 10}];
   let s = `<defs>${CAR}</defs>` + legend(W - n * 70 - 10, 14);
   rows.forEach((rw, ri) => {
@@ -376,7 +381,7 @@ function eventFrame(t) {  // Lap time, position and same-lap interval around eac
       if (ri === 0) s += `<text class="label" x="${ox}" y="30" fill="${D.ink}">${e.name} (cars must slow down) · laps ${e.before}–${e.after}</text>`;
       s += phases(e, xs, top, bottom, ri === 0);
       const step = rw.step || (hi - lo > 15 ? 5 : 1);
-      for (let v = rw.lo !== undefined ? lo : Math.ceil(lo / step) * step; v <= hi; v += step)
+      for (let v = ri === 0 ? Math.ceil(lo / step) * step : rw.lo !== undefined ? lo : Math.ceil(lo / step) * step; v <= hi; v += step)
         s += `<line x1="${ox}" x2="${ox + pw}" y1="${ys(v)}" y2="${ys(v)}" stroke="${D.grid}"/><text class="axis" x="${ox - 6}" y="${ys(v) + 4}" fill="${D.ink}" text-anchor="end">${v}</text>`;
       if (ri === 2) { const xstep = niceStep(xhi - xlo);
         for (let v = Math.ceil(xlo / xstep) * xstep; v <= xhi; v += xstep) s += `<text class="axis" x="${xs(v)}" y="${bottom + 16}" fill="${D.ink}" text-anchor="middle">${v}</text>`;
@@ -384,7 +389,8 @@ function eventFrame(t) {  // Lap time, position and same-lap interval around eac
       if (ri === 0) {
         const normal = median(e.series.flatMap(q => q.points.filter(p => p.time !== null && !p.vscLap).map(p => p.time)));
         s += `<line x1="${ox}" x2="${ox + pw}" y1="${ys(normal)}" y2="${ys(normal)}" stroke="${D.ink}" stroke-dasharray="5 4" opacity=".55"/>`
-           + `<text class="axis" x="${ox + pw - 4}" y="${ys(normal) - 5}" fill="${D.ink}" text-anchor="end" font-weight="700">a normal lap ≈ ${normal.toFixed(0)} s</text>`;
+           + `<line x1="${ox + 8}" x2="${ox + 30}" y1="${top + 12}" y2="${top + 12}" stroke="${D.ink}" stroke-dasharray="5 4"/>`
+           + `<text class="axis" x="${ox + 36}" y="${top + 16}" fill="${D.ink}" font-weight="700">a normal lap ≈ ${normal.toFixed(0)} s</text>`;
         const slow = e.series.flatMap(q => q.points.filter(p => p.time !== null).map(p => ({...p, code: q.code}))).sort((a, b) => b.time - a.time)[0];
         if (slow && slow.x <= cx) {
           const text = `slowest lap: ${slow.code} lap ${slow.lap}, ${slow.time.toFixed(1)} s`, w = text.length * 6.3 + 18, left = xs(slow.x) + 16 + w > ox + pw;
@@ -393,7 +399,7 @@ function eventFrame(t) {  // Lap time, position and same-lap interval around eac
              + `<text class="label" x="${(left ? xs(slow.x) - 14 - w : xs(slow.x) + 14) + w / 2}" y="${ys(slow.time) + 4}" fill="#15151e" text-anchor="middle" font-size="11">${text}</text>`;
         }
       }
-      s += `<line x1="${xs(cx)}" x2="${xs(cx)}" y1="${top}" y2="${bottom}" stroke="${D.ink}" opacity=".5"/>`;
+      if (k < 1) s += `<line x1="${xs(cx)}" x2="${xs(cx)}" y1="${top}" y2="${bottom}" stroke="${D.ink}" opacity=".5"/>`;
       e.series.forEach((q, qi) => {
         const d = D.drivers[qi], shown = q.points.filter(p => p.x <= cx && !(rw.skipPit && p.time === null));
         for (const p of shown) s += mark(xs(p.x), ys(rw.f(p)), d.color, d.dashed,

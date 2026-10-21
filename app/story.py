@@ -154,7 +154,7 @@ def pit_slide() -> None:
             ['A VSC flag on a lap only means the VSC happened at some point during that lap.',
              'The ringed stops are the ones with a flag. The bars are placed by recorded times, so you can see who really stopped inside the yellow zone.'])
     st.write(f'Of the {len(visits_clock)} pit visits shown, {flagged} have a VSC flag on the entry or exit lap, '
-             f'but {len(overlapping)} overlap a VSC in the recorded timestamps.')
+             f"but {len(overlapping)} {'overlaps' if len(overlapping) == 1 else 'overlap'} a VSC in the recorded timestamps.")
     n = laps.Driver.nunique()
     st.iframe(replay.html(laps, 'pitclock', mode, 200+48*n), height=210+48*n)
     st.caption('Each bar is a pit visit from pit-lane entry to exit on the session clock, set against the deployed and ending phases '
