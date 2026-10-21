@@ -32,7 +32,7 @@ No additional chart implementation is missing from this checklist. Human interpr
 
 ## #8 — Draft layout and check audience understanding
 
-The existing `app/story.py`, theme, replay and static exports cover the prototype requirements already checked in the issue: desktop sequence, driver identities, terminology, units, source and limitations. [The design rationale](design-rationale.md) records the baseline layout, the subsequent story update, alternatives and known interpretation limits. [PR #15](https://github.com/haydenteh5526/F1-Strategy-Visualisation/pull/15) is now merged into main at `b61a8e3`, after approval of head `1e5e03e` and 64 passing tests. This branch has not yet incorporated that merge. Audience feedback remains pending independently of the implementation merge.
+The existing `app/story.py`, theme, replay and static exports cover the prototype requirements already checked in the issue: desktop sequence, driver identities, terminology, units, source and limitations. [The design rationale](design-rationale.md) records the baseline layout, the subsequent story update, alternatives and known interpretation limits. [PR #15](https://github.com/haydenteh5526/F1-Strategy-Visualisation/pull/15) is now merged into main at `b61a8e3`, after approval of head `1e5e03e` and 64 passing tests. This branch incorporates that merge through integration commit `65bf96d`. Audience feedback remains pending independently of the implementation merge.
 
 | Remaining criterion | Status | Next action |
 | --- | --- | --- |
@@ -48,3 +48,8 @@ The baseline combined suite has 59 passing tests with no skips on this Windows c
 All six prepared outputs were previously reproduced byte-for-byte from the retained snapshot after updating to main `ce8a0a1`. Session-status offsets remain unverified because the raw pack lacks `session_status.csv`.
 
 This review adds documentation only. It does not change eligibility, analysis results, charts, the app, GitHub checkboxes or PR approvals. Review the evidence in PR #16; retain the normal approval requirement before merging.
+
+
+## Regression fixes after integration
+
+The combined Roy/main checkout now passes **81 tests with no skips**, run with `python -X utf8=0 -m unittest discover -s tests -v` on Windows. Replay subprocess input/output explicitly uses UTF-8, so Unicode labels no longer depend on Python UTF-8 mode. All four animated views redraw at their current race time after resizing, including midway through playback and at the finished frame. Exact teammate comparisons return empty tables with headers when no pairs match, and driver summaries retain zero-eligible drivers and all recorded-lap counts. Regression tests cover these cases. All four existing exploration CSVs reproduce byte-for-byte; no analysis results or exports were changed. Audience feedback remains pending.

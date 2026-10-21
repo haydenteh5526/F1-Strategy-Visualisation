@@ -1,6 +1,6 @@
 # Austria 2026: preliminary pace and tyre exploration
 
-Local exploratory work for Roy's issues #5 and #6, based on main `ce8a0a1`. These observations describe six drivers in one race. They do not identify an optimal strategy or isolate tyre wear. This analysis does not change the story interface. Sebastian's PR #15 addresses presentation separately and is now merged into main at `b61a8e3`; this branch has not yet incorporated that merge.
+Local exploratory work for Roy's issues #5 and #6, based on main `ce8a0a1`. These observations describe six drivers in one race. They do not identify an optimal strategy or isolate tyre wear. This analysis does not change the story interface. Sebastian's PR #15 addresses presentation separately and is now merged into main at `b61a8e3`; this branch incorporates that merge through integration commit `65bf96d`.
 
 ## Reproduce
 

@@ -1,6 +1,6 @@
 # Prototype design rationale
 
-This records the baseline layout on `Roys_Branch` at `818e132` and the subsequent main-branch story update for issue #8. It describes design intent and available evidence. Audience testing is pending; no comprehension or preference results are claimed. Sebastian's PR #15 is now merged into main at `b61a8e3`, following review of head `1e5e03e`. The local Roy branch has not yet incorporated that merge.
+This records the baseline layout on `Roys_Branch` at `818e132` and the subsequent main-branch story update for issue #8. It describes design intent and available evidence. Audience testing is pending; no comprehension or preference results are claimed. Sebastian's PR #15 is now merged into main at `b61a8e3`, following review of head `1e5e03e`. The Roy branch incorporates that merge through integration commit `65bf96d`.
 
 ## Audience and tasks
 

@@ -32,6 +32,10 @@ def analyse(laps: pd.DataFrame) -> dict[str, pd.DataFrame]:
         EligibleLaps=('LapNumber', 'size'), MedianSeconds=('LapTimeSeconds', 'median'),
         Q1Seconds=('LapTimeSeconds', lambda s: s.quantile(.25)),
         Q3Seconds=('LapTimeSeconds', lambda s: s.quantile(.75))).reset_index()
+    # Retain drivers with no eligible observations and report their zero sample size.
+    summary = laps[['Team', 'Driver']].drop_duplicates().sort_values(['Team', 'Driver']).merge(
+        summary, on=['Team', 'Driver'], how='left', validate='one_to_one')
+    summary['EligibleLaps'] = summary.EligibleLaps.fillna(0).astype(int)
     summary['IQRSeconds'] = summary.Q3Seconds-summary.Q1Seconds
     summary['RecordedLaps'] = summary.Driver.map(laps.groupby('Driver').size())
     summary['ExcludedLaps'] = summary.RecordedLaps-summary.EligibleLaps
@@ -39,8 +43,9 @@ def analyse(laps: pd.DataFrame) -> dict[str, pd.DataFrame]:
     # Exact same lap, same compound, both eligible. Windows fixed before inspecting results.
     # This controls race lap and compound, but not tyre age, fuel, traffic or car differences.
     matched = []
-    for team, rows in pace.groupby('Team'):
-        a, b = sorted(rows.Driver.unique())
+    for team, team_laps in laps.groupby('Team'):
+        a, b = sorted(team_laps.Driver.unique())
+        rows = pace.loc[pace.Team.eq(team)]
         pair = rows.loc[rows.Driver.eq(a)].merge(rows.loc[rows.Driver.eq(b)],
             on=['LapNumber', 'Compound'], suffixes=('A', 'B'), validate='one_to_one')
         for r in pair.itertuples():
@@ -50,7 +55,9 @@ def analyse(laps: pd.DataFrame) -> dict[str, pd.DataFrame]:
                 'DifferenceSecondsAminusB': r.LapTimeSecondsA-r.LapTimeSecondsB,
                 'TyreAgeA': r.TyreLifeA, 'TyreAgeB': r.TyreLifeB,
                 'StintA': r.StintA, 'StintB': r.StintB})
-    matched = pd.DataFrame(matched)
+    matched = pd.DataFrame(matched, columns=[
+        'Team', 'DriverA', 'DriverB', 'LapNumber', 'Compound', 'Window',
+        'DifferenceSecondsAminusB', 'TyreAgeA', 'TyreAgeB', 'StintA', 'StintB'])
     windows = matched.groupby(['Team', 'DriverA', 'DriverB', 'Window', 'Compound'], sort=False).agg(
         MatchedLaps=('LapNumber', 'size'),
         MedianDifferenceSecondsAminusB=('DifferenceSecondsAminusB', 'median'),

@@ -470,7 +470,9 @@ function eventFrame() {   // Lap time, position and gap at each lap completion a
   fitFrame(height);
 }
 
+let currentTime = D.t0;
 function frame(t) {
+  currentTime = t;
   if (KIND === 'pitclock') return pitFrame();
   if (KIND === 'event') return eventFrame();
   if (KIND === 'pace') return paceFrame(Math.min(1, 3 * (t - D.t0) / (D.t1 - D.t0)));
@@ -489,6 +491,6 @@ function tick(now) {
 const STATIC = KIND === 'pitclock' || KIND === 'event';  // Recorded times, so nothing animates between them.
 function play() { start = null; reduced || STATIC ? frame(D.t1) : requestAnimationFrame(tick); }
 document.getElementById('replay').onclick = play;
-addEventListener('resize', () => { if (reduced || STATIC) frame(D.t1); });
+addEventListener('resize', () => frame(currentTime));
 play();
 </script></body></html>'''

@@ -68,6 +68,32 @@ class PaceTyreTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Duplicate'):
             module.analyse(pd.concat([self.laps, self.laps.iloc[[0]]]))
 
+    def test_disjoint_eligible_laps_return_empty_comparison_tables(self):
+        changed = self.laps.copy()
+        for _, rows in changed.groupby('Team'):
+            a, b = sorted(rows.Driver.unique())
+            changed.loc[changed.Driver.eq(a) & changed.LapNumber.mod(2).eq(0), 'EligibleForPace'] = False
+            changed.loc[changed.Driver.eq(b) & changed.LapNumber.mod(2).eq(1), 'EligibleForPace'] = False
+        tables = module.analyse(changed)
+        self.assertTrue(tables['matched_laps'].empty)
+        self.assertTrue(tables['matched_windows'].empty)
+        self.assertIn('DifferenceSecondsAminusB', tables['matched_laps'])
+        self.assertIn('MatchedLaps', tables['matched_windows'])
+        self.assertTrue(tables['pace_summary'].EligibleLaps.gt(0).all())
+
+    def test_zero_eligible_samples_retain_driver_and_stint_counts(self):
+        for excluded in [['HAM'], module.DRIVERS]:
+            with self.subTest(excluded=excluded):
+                changed = self.laps.copy()
+                changed.loc[changed.Driver.isin(excluded), 'EligibleForPace'] = False
+                tables = module.analyse(changed)
+                summary = tables['pace_summary'].set_index('Driver')
+                self.assertEqual(len(summary), 6)
+                self.assertEqual(summary.RecordedLaps.sum(), 426)
+                self.assertTrue(summary.loc[excluded, 'EligibleLaps'].eq(0).all())
+                self.assertTrue(summary.loc[excluded, 'MedianSeconds'].isna().all())
+                self.assertEqual(tables['stint_summary'].RecordedLaps.sum(), 426)
+
 
 if __name__ == '__main__':
     unittest.main()
