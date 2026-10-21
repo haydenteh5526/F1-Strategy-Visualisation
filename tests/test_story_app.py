@@ -23,17 +23,17 @@ class StoryAppTests(unittest.TestCase):
 
     def test_every_slide_shows_one_chart(self):
         titles = set()
-        for slide in range(5):
+        for slide in range(6):
             self.go_to(slide)
             replays = [f for f in self.app.get('iframe') if 'Race replay' in str(f.proto)]
             charts_shown = len(self.app.get('vega_lite_chart'))+len(replays)
             self.assertEqual(charts_shown, 1)
             titles.add(self.app.subheader[0].value)
-        self.assertEqual(len(titles), 5)
+        self.assertEqual(len(titles), 6)
 
     def test_arrows_wrap_around(self):
         self.app.button(key='previous').click().run()
-        self.assertEqual(self.app.session_state.slide, 4)
+        self.assertEqual(self.app.session_state.slide, 5)
         self.app.button(key='next').click().run()
         self.assertEqual(self.app.session_state.slide, 0)
 
@@ -63,6 +63,20 @@ class StoryAppTests(unittest.TestCase):
         for driver, laps in pace.groupby('Driver'):
             self.assertAlmostEqual(summary.loc[driver, 'Typical'], laps.LapTimeSeconds.median())
             self.assertEqual(summary.loc[driver, 'Laps'], len(laps))
+
+    def test_slides_follow_the_design_plan_order(self):
+        order = []
+        for slide in range(6):
+            self.go_to(slide)
+            order.append(self.app.subheader[0].value)
+        self.assertEqual([title.split('.')[0] for title in order[:5]], ['1', '2', '3', '4', '5'])
+        self.assertTrue(order[5].startswith('Extra'))
+
+    def test_pit_slide_states_the_main_message_and_the_counts(self):
+        self.go_to(3)
+        message = ' '.join(box.value for box in self.app.info)
+        self.assertIn('requires the recorded event clock', message)
+        self.assertTrue(any('3 have a VSC flag on the entry or exit lap, but 1 overlap' in m.value for m in self.app.markdown))
 
     def test_vsc_laps_are_summarised(self):
         self.go_to(4)

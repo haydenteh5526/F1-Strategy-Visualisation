@@ -118,13 +118,13 @@ def pace_summary(pace: pd.DataFrame) -> pd.DataFrame:
     times = pace.groupby(['Team', 'Driver']).LapTimeSeconds
     return pd.DataFrame({'Typical': times.median(), 'Low': times.quantile(.25), 'High': times.quantile(.75),
                          'Laps': times.size()}).reset_index().assign(
-        Label=lambda d: d.Typical.map('{:.2f} s'.format))
+        Label=lambda d: d.Typical.map('{:.2f} s'.format)+' · '+d.Laps.astype(str)+' laps')
 
 
 def pace_chart(pace: pd.DataFrame, mode: str) -> alt.LayerChart:
     summary = pace_summary(pace)
     order = driver_order(summary)
-    color = team_color(list(summary.Team.unique()), mode)
+    color = team_color(list(summary.Team.unique()), mode).legend(None)
     x = alt.X('Low:Q', title='Lap time (s)', axis=alt.Axis(tickCount=5, format='.1f'),
               scale=alt.Scale(domain=[summary.Low.min()-.3, summary.High.max()+.5], nice=False))
     y = alt.Y('Driver:N', sort=order, title=None,
@@ -134,29 +134,50 @@ def pace_chart(pace: pd.DataFrame, mode: str) -> alt.LayerChart:
                alt.Tooltip('High', title='Middle half to (s)', format='.3f'), alt.Tooltip('Laps', title='Laps')]
     base = alt.Chart(summary).encode(y=y, color=color, tooltip=tooltip)
     spread = base.mark_bar(height=10, cornerRadius=5, opacity=.35).encode(x=x, x2='High:Q')
-    typical = base.mark_point(filled=True, size=170, opacity=1, stroke=SURFACE[mode], strokeWidth=2).encode(
-        x=alt.X('Typical:Q', title='Lap time (s)'))
+    typical = alt.Chart(summary).mark_point(filled=True, size=190, opacity=1, stroke=SURFACE[mode], strokeWidth=2).encode(
+        x=alt.X('Typical:Q', title='Lap time (s)'), y=y, tooltip=tooltip, **driver_marks(summary, mode))
     labels = alt.Chart(summary).mark_text(align='left', dx=8, fontSize=12, color=INK[mode]).encode(
         x=alt.X('High:Q', title='Lap time (s)'), y=y, text='Label:N')
-    return alt.layer(spread, typical, labels).properties(height=52*len(order))
+    # The bars use a team colour scale and the marks a driver one, so the layers must not share a colour scale.
+    return alt.layer(spread, typical, labels).resolve_scale(color='independent', shape='independent').properties(height=52*len(order))
+
+
+def label_heights(pace: pd.DataFrame, clear: float = .45, reach: int = 9) -> pd.Series:
+    """Height for each stint-end label, nudged up only where it would collide with another label in the same panel."""
+    heights = pace.LapTimeSeconds.copy()
+    for driver, rows in pace.groupby('Driver'):
+        placed = []
+        ends = rows.sort_values('TyreLife').groupby('Stint').tail(1).sort_values('LapTimeSeconds')
+        for index, end in ends.iterrows():
+            height = end.LapTimeSeconds
+            while any(abs(height-h) < clear and abs(end.TyreLife-age) < reach for age, h in placed):
+                height += .3
+            placed.append((end.TyreLife, height))
+            heights[index] = height
+    return heights
 
 
 def tyre_age_chart(pace: pd.DataFrame, mode: str = 'light') -> alt.FacetChart:
+    """One point per normal racing lap, so no line crosses an excluded lap; panels and stint labels carry lap counts."""
     order = driver_order(pace)
-    data = pace.assign(Panel=pace.Driver+' · '+pace.Team, Letter=pace.Compound.str[0])
+    totals = pace.groupby('Driver').size()
+    stint_laps = pace.groupby(['Driver', 'Stint']).LapNumber.transform('size')
+    data = pace.assign(Panel=pace.Driver+' · '+pace.Team+' · '+pace.Driver.map(totals).astype(str)+' laps',
+                       Letter=pace.Compound.str[0]+' · '+stint_laps.astype(str)+' laps',
+                       LabelY=label_heights(pace))
     panels = sorted(data.Panel.unique(), key=lambda p: order.index(p.split(' · ')[0]))
     base = alt.Chart().encode(
         x=alt.X('TyreLife:Q', title='Tyre age (laps)'),
         y=alt.Y('LapTimeSeconds:Q', title='Lap time (s)', scale=alt.Scale(zero=False)),
         detail='Stint:N')
-    lines = base.mark_line(strokeWidth=2).encode(color=compound_color())
-    ends = base.transform_window(Rank='rank()', sort=[alt.SortField('TyreLife', order='descending')],
-                                 groupby=['Panel', 'Stint']).transform_filter('datum.Rank == 1')
-    labels = ends.mark_text(align='left', dx=5, fontSize=11, fontWeight='bold', color=INK[mode]).encode(text='Letter:N')
-    hover = base.mark_point(size=90, opacity=0).encode(tooltip=[
+    points = base.mark_circle(size=38, opacity=.95).encode(color=compound_color(), tooltip=[
         'Driver', alt.Tooltip('Compound', title='Tyre'), alt.Tooltip('TyreLife', title='Tyre age (laps)'),
         alt.Tooltip('LapNumber', title='Lap'), alt.Tooltip('LapTimeSeconds', title='Lap time (s)', format='.3f')])
-    return alt.layer(lines, labels, hover, data=data).properties(width=250, height=150).facet(
+    ends = base.transform_window(Rank='rank()', sort=[alt.SortField('TyreLife', order='descending')],
+                                 groupby=['Panel', 'Stint']).transform_filter('datum.Rank == 1')
+    labels = ends.mark_text(align='left', dx=7, fontSize=11, fontWeight='bold', color=INK[mode]).encode(
+        y=alt.Y('LabelY:Q', scale=alt.Scale(zero=False)), text='Letter:N')
+    return alt.layer(points, labels, data=data).properties(width=250, height=150).facet(
         facet=alt.Facet('Panel:N', sort=panels, title=None, header=alt.Header(labelFontWeight='bold', labelFontSize=12)),
         columns=2).resolve_scale(x='shared', y='shared')
 

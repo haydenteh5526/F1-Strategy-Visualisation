@@ -48,6 +48,8 @@ Save the charts as images in `figures/austria-2026/` for slides and the static s
 & ".\.venv\Scripts\python.exe" scripts\export_figures.py
 ```
 
+The story page follows the design plan: slides 1 to 5 are its five views (stints, pace, tyre age, pit visits and the VSC clock, event context), then an extra positions view. The static images of the pit and VSC views are in `figures/austria-2026/pit-vsc/`, made by `scripts/explore_pit_vsc.py`.
+
 ## Data and documentation
 
 Raw laps, weather, results, race-control messages and track-status events remain locally in ignored `data/raw/austria-2026/`. Download caches are also ignored.
