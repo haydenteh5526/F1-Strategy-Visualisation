@@ -1,6 +1,6 @@
 # Austria 2026: preliminary pace and tyre exploration
 
-Local exploratory work for Roy's issues #5 and #6, based on main `ce8a0a1`. These observations describe six drivers in one race. They do not identify an optimal strategy or isolate tyre wear. The story interface is unchanged; Sebastian's pending PR #15 addresses presentation separately.
+Local exploratory work for Roy's issues #5 and #6, based on main `ce8a0a1`. These observations describe six drivers in one race. They do not identify an optimal strategy or isolate tyre wear. This analysis does not change the story interface. Sebastian's PR #15 addresses presentation separately and is now merged into main at `b61a8e3`; this branch has not yet incorporated that merge.
 
 ## Reproduce
 
@@ -63,4 +63,4 @@ On 21 October 2026, the combined Windows suite passed **59 tests, no skips**, in
 
 The retained raw snapshot reproduced all six prepared files byte-for-byte after the pull. Timing validation passed 1,065 pairwise comparisons and six finishing checks against the saved reference. The snapshot lacks `session_status.csv`, so start/finish-message offsets remain unverified locally. Committed data and the existing timing report were preserved.
 
-Human interpretation review, teammate approval and actual audience feedback remain pending. Review the matching choices and these provisional observations before moving them into the story or closing #5/#6. No issue updates, commits, pushes or PRs were made by this continuation.
+Human interpretation review, teammate approval and actual audience feedback remain pending. Review the matching choices and these provisional observations before moving them into the story or closing #5/#6. The implementation was committed as `818e132`, pushed on `Roys_Branch` and submitted in [PR #16](https://github.com/haydenteh5526/F1-Strategy-Visualisation/pull/16). See the [issue review](../issue-review.md) for a criterion-by-criterion evidence map and the separate pending audience work for #8.
