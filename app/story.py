@@ -59,64 +59,160 @@ def strategy_table(laps: pd.DataFrame, stints: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows).sort_values(['Team', 'Driver'], key=lambda s: s.map(order) if s.name == 'Team' else s)
 
 
-def pit_table(visits: pd.DataFrame) -> pd.DataFrame:
-    flagged = lambda code: any(c in code for c in '267')
+def pit_clock_table(visits: list[dict], teams: pd.Series) -> pd.DataFrame:
+    """All pit visits with how each relates to the VSC clock; flagged laps and real overlap are different questions."""
+    table = pd.DataFrame(visits)
     return pd.DataFrame({
-        'Driver': visits.Driver, 'Team': visits.Team, 'In-lap': visits.EntryLap,
-        'Pit-lane time (s)': visits.PitLaneElapsedSeconds.round(1),
-        'VSC or yellow on in/out-lap': [('Yes' if flagged(a) or flagged(b) else 'No')
-                                        for a, b in zip(visits.EntryTrackStatus, visits.ExitTrackStatus)]
-    }).sort_values(['In-lap', 'Driver'])
+        'Driver': table.driver, 'Team': table.driver.map(teams), 'Entry lap': table.entryLap,
+        'Pit-lane time (s)': table.elapsed.round(1),
+        'VSC flag on a pit lap': table.whole.map({True: 'Yes', False: 'No'}),
+        'Overlaps VSC (s)': table.overlap.round(1),
+        'Within 1 s of a VSC boundary': table.near.map({True: 'Yes', False: 'No'}),
+    }).sort_values(['Entry lap', 'Driver'])
+
+
+def explain(takeaway: str, read: list[str], notice: list[str]) -> None:
+    """Plain-English box above a chart, so a viewer who does not follow F1 knows what to look at."""
+    st.html(theme.guide(takeaway, read, notice))
 
 
 def overview_slide() -> None:
+    stops = stints.groupby('Driver').size()-1
+    who = ', '.join(sorted(stops[stops == stops.max()].index))
+    soft = sorted(stints.loc[stints.Compound.eq('SOFT'), 'Driver'].unique())
+    firsts = stints.sort_values('FirstLap').groupby('Driver').Compound.first()
+    text = (f'Every driver made {stops.max()} pit stops. ' if stops.min() == stops.max()
+            else f'Drivers made {stops.min()} to {stops.max()} pit stops, and {who} stopped the most ({stops.max()}). ')
+    text = ('Everyone started on Medium tyres. ' if firsts.eq('MEDIUM').all() else '')+text
+    text += f"Only {', '.join(soft)} used the Soft tyre." if soft else ''
+    explain(text, ['Each row is one driver, and each coloured bar is one set of tyres: <b>S</b> = Soft, <b>M</b> = Medium, <b>H</b> = Hard.',
+                   'A gap between two bars is a <b>pit stop</b>: the car drives into the pit lane to change tyres.',
+                   'A grey strip is a <b>Virtual Safety Car (VSC)</b>: after an incident, every car must slow down for a short time.'],
+            [f'<b>{who}</b> stopped the most ({stops.max()} times).' if stops.min() != stops.max() else 'Every driver stopped the same number of times.',
+             'This only shows who used which tyre and when. It does not say who was faster.'])
     # Our own HTML built from the prepared data, so it is safe to run as an iframe.
     st.iframe(replay.html(laps, 'timeline', mode, 52*laps.Driver.nunique()+80), height=52*laps.Driver.nunique()+90)
     st.caption('Each bar is one stint, starting with its tyre: S (Soft), M (Medium) or H (Hard). '
-               'Gaps between bars are pit stops, grey bands are Virtual Safety Car laps and the stripe shows the team.')
+               'Gaps between bars are pit stops, grey bands are Virtual Safety Car laps and the stripe shows the team. '
+               'Stint length is observed use, not tyre wear.')
     st.markdown('##### Strategy by driver')
     st.dataframe(strategy_table(laps, stints), hide_index=True, width='stretch')
 
 
 def pace_slide() -> None:
+    ranked = charts.pace_summary(pace).sort_values('Typical')
+    fast, slow = ranked.iloc[0], ranked.iloc[-1]
+    steady = ranked.assign(Spread=ranked.High-ranked.Low).sort_values('Spread').iloc[0]
+    explain(f'Typical lap times were very close: {fast.Driver} was quickest ({fast.Typical:.2f} s) and {slow.Driver} slowest '
+            f'({slow.Typical:.2f} s), only {slow.Typical-fast.Typical:.2f} s apart.',
+            ['Each row is one driver. The <b>dot or triangle</b> is their typical lap time, and the <b>bar</b> shows where the middle half of their laps fell.',
+             'A lower time is a faster lap. A shorter bar means steadier lap times.',
+             'Only normal racing laps count: not lap 1, not pit-stop laps, and not laps under a VSC or yellow flag.'],
+            [f'<b>{steady.Driver}</b> had the steadiest laps (the shortest bar).',
+             'A small gap does not show who had the better strategy: fuel, traffic and conditions are not accounted for.'])
     st.write(f'Compares {len(pace)} normal racing laps. '
              'Lap 1, pit-stop laps, VSC and yellow-flag laps, and deleted laps are left out.')
     st.iframe(replay.html(laps, 'pace', mode, 56*laps.Driver.nunique()+80), height=56*laps.Driver.nunique()+90)
-    st.caption("The bar covers the middle half of each driver's normal racing laps and the dot marks their typical lap. "
-               'A shorter bar means more consistent pace.')
+    st.caption("The bar covers the middle half of each driver's normal racing laps, the dot or triangle marks their typical lap "
+               'and the count is the number of laps behind it. Lower times are faster; a shorter bar means more consistent pace, '
+               'not a better strategy. Fuel load, traffic and conditions are not controlled.')
 
 
 def tyre_slide() -> None:
+    explain('Lap times and tyre age move together in a messy way, so we describe the pattern without claiming the tyres caused it.',
+            ['Each <b>dot</b> is one normal lap. Further right means older tyres (more laps on that set), and higher up means a slower lap.',
+             'Colour shows the tyre: red is Soft, yellow is Medium and grey is Hard.',
+             'Each panel is one driver, with the number of laps behind it.'],
+            ['Cars get lighter as fuel burns, which makes laps faster and can hide tyre wear.',
+             'Tyre age counts laps on a set. It is not a measure of how worn the tyre is.'])
     st.write('Tyre age counts laps on a set, not wear. Cars also get lighter as fuel burns, '
              'so slower or faster laps are not caused by tyres alone.')
     panel_rows = -(-laps.Driver.nunique()//2)
     st.iframe(replay.html(laps, 'tyres', mode, 190*panel_rows+90), height=190*panel_rows+100)
-    st.caption('Each line is one stint, labelled by tyre. Only normal racing laps are shown.')
+    st.caption('Each dot is one normal racing lap, coloured by tyre and labelled with its stint and lap count. '
+               'Lines are not drawn across the laps that are left out. Sparse stints may not support a trend.')
 
 
 def pit_slide() -> None:
-    st.write('Pit-lane time covers the whole trip through the pit lane, not just the stationary stop.')
-    st.iframe(replay.html(laps, 'positions', mode, 420), height=430)
-    st.caption('Dots mark the lap each driver entered the pits. Team-mates share a colour, '
-               'one solid and one dashed; labels on the right name each driver.')
-    st.markdown('##### Pit stops')
-    st.dataframe(pit_table(visits), hide_index=True, width='stretch')
+    st.info('**Provisional main message:** interpreting pit-stop timing requires the recorded event clock. A VSC flag on a '
+            'pit-entry or pit-exit lap does not by itself show that the pit visit happened during a Virtual Safety Car period.',
+            icon=':material/flag:')
+    visits_clock = replay.pit_data(list(laps.Driver.unique()))
+    if not visits_clock:
+        st.warning('The pit/VSC exploration files in docs/pit-vsc-exploration are needed for this view.')
+        return
+    flagged = sum(v['whole'] for v in visits_clock)
+    overlapping = [v for v in visits_clock if v['overlap'] > 0]
+    close = [v for v in visits_clock if v['near'] and v['overlap'] == 0]
+    names = ', '.join(f"{v['driver']} on lap {v['entryLap']}" for v in overlapping)
+    text = f'{flagged} pit stops were on laps marked with a VSC flag, but only {len(overlapping)} ({names}) happened while the VSC was active.'
+    if close:
+        text += ' ' + ' '.join(f"{v['driver']}'s lap {v['entryLap']} stop ended just {v['nearest']:.3f} s before it began, too close to call." for v in close)
+    explain(text, ['Each <b>coloured bar</b> is one car driving through the <b>pit lane</b> (the road where cars change tyres), from entering to leaving.',
+                   'The <b>yellow zone</b> is a Virtual Safety Car (VSC) period. It begins at <b>VSC starts</b>, when every car must slow down; the lighter part after <b>VSC ending</b> is the last stretch before <b>racing again</b>.',
+                   'The badge says how each flagged stop relates to the real VSC period, using the recorded times.'],
+            ['A VSC flag on a lap only means the VSC happened at some point during that lap.',
+             'The ringed stops are the ones with a flag. The bars are placed by recorded times, so you can see who really stopped inside the yellow zone.'])
+    st.write(f'Of the {len(visits_clock)} pit visits shown, {flagged} have a VSC flag on the entry or exit lap, '
+             f"but {len(overlapping)} {'overlaps' if len(overlapping) == 1 else 'overlap'} a VSC in the recorded timestamps.")
+    n = laps.Driver.nunique()
+    st.iframe(replay.html(laps, 'pitclock', mode, 200+48*n), height=210+48*n)
+    st.caption('Each bar is one pit-lane visit, from entering to leaving, placed on the recorded session clock against the phases of '
+               'each VSC. A visit within 1 second of a VSC edge is called too close to call: that rule is a caution, not a measured '
+               'accuracy. The bar is the whole trip through the pit lane, not the time the car stood still or the time lost.')
+    st.markdown('##### Pit visits and the VSC clock')
+    st.dataframe(pit_clock_table(visits_clock, laps.drop_duplicates('Driver').set_index('Driver').Team),
+                 hide_index=True, width='stretch')
 
 
-def vsc_slide() -> None:
+def event_slide() -> None:
+    clock = replay.vsc_clock()
+    window = pd.concat([laps[laps.LapNumber.between(c['before'], c['after'])] for c in clock]) if clock else laps.iloc[0:0]
+    valid = window[~(window.IsFirstLap | window.IsPitInLap | window.IsPitOutLap)]
+    if len(valid):
+        slowest = valid.loc[valid.LapTimeSeconds.idxmax()]
+        text = (f"When the VSC began, lap times jumped: the slowest lap was {slowest.Driver}'s lap {int(slowest.LapNumber)} at "
+                f'{slowest.LapTimeSeconds:.1f} s')
+        text += (f', against about {pace.LapTimeSeconds.median():.0f} s for a typical normal racing lap.' if len(pace)
+                 else '. There are no normal racing laps in this selection to compare it with.')
+    else:
+        text = 'No VSC laps for the selected teams.'
+    explain(text, ['There is one set of panels for each VSC. The clock shows seconds since that VSC started (<b>0 s</b>), so left of 0 is before it.',
+                   'Top row: lap times. Middle row: race position (1 = leading). Bottom row: seconds behind the first car to finish that lap.',
+                   'Each dot is one lap, placed at the moment its car <b>finished</b> that lap. A <b>hollow dot</b> is a lap that included a pit stop.',
+                   'An <b>amber ring</b> marks a lap the VSC affected.'],
+            ['The amber-ringed laps are far slower than the dashed line, which marks a typical normal racing lap of the whole race.',
+             'The yellow zone shows the VSC status at that moment on the clock. A ringed lap can finish after the zone ends, because it was run partly under the VSC.',
+             'Positions and gaps also move because cars were pitting at the same time. This shows what happened, not what the VSC caused.'])
     vsc = laps.loc[laps.HasVSC, 'LapNumber']
-    st.write(f'VSC periods affected laps {lap_ranges(vsc)}. These laps are left out of pace comparisons '
-             'but still matter for pit-stop timing.' if len(vsc) else 'No VSC laps for the selected teams.')
-    st.iframe(replay.html(laps, 'vsc', mode, 420), height=430)
-    st.caption('Each car drops a dot for every lap except lap 1 and pit-stop laps. The yellow strips cover the laps flagged as '
-               'Virtual Safety Car affected, and the label follows the recorded VSC times (deployed, then ending).')
+    st.write(f'VSC periods affected laps {lap_ranges(vsc)}. These laps are left out of pace comparisons but belong in the event '
+             'explanation, so every non-pit affected lap is kept here.' if len(vsc) else 'No VSC laps for the selected teams.')
+    st.iframe(replay.html(laps, 'event', mode, 800), height=810)
+    st.caption('Each dot sits at the moment a car finished a lap, with nothing drawn between laps. The bottom row compares cars on the '
+               'same lap: seconds behind the first car of the whole field to finish it, which is not a live gap. Changes across these '
+               'windows include pit activity and other racing, so they do not isolate the effect of the VSC.')
 
 
-SLIDES = {'The race at a glance': overview_slide,
-          '1. Who was fastest in normal racing?': pace_slide,
-          '2. How did lap times change as tyres aged?': tyre_slide,
-          '3. What happened around the pit stops?': pit_slide,
-          '4. How did the Virtual Safety Car change things?': vsc_slide}
+def positions_slide() -> None:
+    last = laps[laps.LapNumber.eq(laps.LapNumber.max())].sort_values('Position').iloc[0]
+    explain(f'{last.Driver} was the highest placed of the selected drivers at the end of the race (position {int(last.Position)}).',
+            ["Each line is one driver's race position after every lap: <b>1 means leading</b>, so a line going down means losing places.",
+             'Dots mark the lap a driver drove into the pit lane.',
+             'Team-mates share a colour; one line is solid and the other dashed.'],
+            ['Big drops in a line usually line up with a pit stop dot: the car loses places while it is in the pit lane.',
+             'Positions are recorded at the end of each lap, so lines join those points.'])
+    st.write('Extra context: where each driver ran lap by lap, with the pit stops marked.')
+    st.iframe(replay.html(laps, 'positions', mode, 420), height=430)
+    st.caption('Positions are recorded at the end of each lap; the lines join those points and the cars only move along the lap '
+               'axis. Dots mark the lap each driver entered the pits. Team-mates share a colour, one solid and one dashed.')
+
+
+SLIDES = {'1. Which tyre sequences did the drivers use?': overview_slide,
+          '2. How do lap times and consistency compare in normal racing?': pace_slide,
+          '3. How does lap time vary with tyre age?': tyre_slide,
+          '4. Which pit visits overlap a VSC?': pit_slide,
+          '5. What do the laps around each VSC show?': event_slide,
+          'Extra: positions through the race': positions_slide}
 
 
 def move(step: int) -> None:
