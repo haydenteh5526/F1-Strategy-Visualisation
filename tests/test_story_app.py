@@ -95,7 +95,7 @@ class StoryAppTests(unittest.TestCase):
         self.go_to(3)
         self.assertIn('only 1 (HAM on lap 25)', takeaway())
         self.go_to(4)
-        self.assertIn("HAD's lap 25 at 100.5 s", takeaway())
+        self.assertIn("HAD's lap 25 at 100.5 s, against about 72 s for a typical normal racing lap", takeaway())
 
     def test_vsc_laps_are_summarised(self):
         self.go_to(4)

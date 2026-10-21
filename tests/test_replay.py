@@ -7,6 +7,8 @@ import subprocess
 import sys
 import unittest
 
+import pandas as pd
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'app'))
 import charts  # noqa: E402
@@ -77,10 +79,10 @@ class ReplayRenderTests(unittest.TestCase):
 
     def test_event_view_draws_the_affected_laps_and_both_windows(self):
         drawn = render(self.page('event', 800))
-        self.assertIn('HAD lap 25: 100.460 s', drawn)
-        self.assertNotIn('HAD lap 1: ', drawn)
-        for title in ['VSC 1 (cars must slow down) · laps 23–27', 'VSC 2 (cars must slow down) · laps 51–54', 'DEPLOYED', 'ENDING', 'CLEAR',
-                      'HAM has no non-pit lap-time observation in VSC 1']:
+        self.assertIn('HAD, lap 25: 100.460 s', drawn)
+        self.assertNotIn('HAD, lap 1: ', drawn)
+        for title in ['VSC 1: laps 23 to 27', 'VSC 2: laps 51 to 54', 'VSC starts', 'VSC ending', 'racing again',
+                      'HAM has no lap-time dot in VSC 1']:
             self.assertIn(title, drawn)
 
     def test_event_view_places_laps_on_the_session_clock_only(self):
@@ -94,13 +96,14 @@ class ReplayRenderTests(unittest.TestCase):
 
     def test_pit_clock_separates_overlap_from_flagged_laps(self):
         drawn = render(self.page('pitclock'))
-        self.assertIn('HAM lap 25: pit lane', drawn)
+        self.assertIn('HAM, lap 25: in the pit lane from', drawn)
         self.assertIn('IN THE PIT LANE DURING THE VSC · 21.2 s', drawn)
+        self.assertEqual(drawn.count('LEFT THE PIT LANE 0.132 s BEFORE THE VSC · TOO CLOSE TO CALL'), 1)
         self.assertEqual(drawn.count('no pit stop in this window'), 9)   # Six drivers: 3 visits across two panels leave 9 empty rows.
         self.assertEqual(drawn.count('TOO CLOSE TO CALL'), 1)
-        self.assertEqual(drawn.count('flagged lap · stop was outside the VSC'), 1)
-        self.assertIn('All 14 pit visits across the race', drawn)
-        self.assertEqual(drawn.count('(cars must slow down)'), 2)
+        self.assertEqual(drawn.count('flagged lap · ended 49.0 s before the VSC'), 1)
+        self.assertIn('All 14 pit-lane visits across the race', drawn)
+        self.assertEqual(drawn.count('every pit-lane visit near it'), 2)
 
     def test_positions_change_only_when_a_lap_is_completed(self):
         page = self.page('positions', 420)
@@ -114,8 +117,63 @@ class ReplayRenderTests(unittest.TestCase):
 
     def test_event_view_marks_a_normal_lap_and_the_slowest_lap(self):
         drawn = render(self.page('event', 800))
-        self.assertEqual(drawn.count('a normal lap ≈'), 2)
-        self.assertIn('slowest lap: HAD lap 25, 100.5 s', drawn)
+        self.assertEqual(drawn.count('a typical normal racing lap ≈ 71.8 s (median of all 361 normal laps)'), 1)
+        self.assertIn('slowest lap here: HAD lap 25, 100.5 s', drawn)
+
+    def test_event_views_are_static_and_say_so(self):
+        for kind in ['pitclock', 'event']:
+            page = self.page(kind, 800)
+            self.assertIn("const STATIC = KIND === 'pitclock' || KIND === 'event'", page)
+            self.assertIn('<body class="panels">', page)         # Panels hide the replay button.
+            self.assertNotIn('<use href="#car"', render(page))    # No cars, no cursor.
+
+    def test_pit_stop_laps_are_hollow_in_the_position_and_gap_rows(self):
+        drawn = render(self.page('event', 800))
+        pit_laps = sum(len(self.laps[self.laps.LapNumber.between(c['before'], c['after']) & (self.laps.IsPitInLap | self.laps.IsPitOutLap)])
+                       for c in replay.vsc_clock())
+        self.assertEqual(len(re.findall(r'fill="#15151e" stroke="#[0-9a-f]{6}" stroke-width="2"', drawn)), 2*pit_laps)
+
+    def test_every_drawn_event_value_matches_the_prepared_laps(self):
+        events = evaluate(self.page('event', 800), 'D.events')
+        indexed = self.laps.set_index(['Driver', 'LapNumber'])
+        checked = 0
+        for event in events:
+            for series in event['series']:
+                for point in series['points']:
+                    row = indexed.loc[(series['code'], point['lap'])]
+                    self.assertAlmostEqual(point['x'], row.TimeSeconds - event['start'], places=3)
+                    self.assertEqual(point['pos'], int(row.Position))
+                    self.assertAlmostEqual(point['gap'], row.GapToEarliestLapCompletionSeconds, places=3)
+                    if point['time'] is not None:
+                        self.assertAlmostEqual(point['time'], row.LapTimeSeconds, places=3)
+                    self.assertEqual(point['pit'], bool(row.IsPitInLap or row.IsPitOutLap))
+                    checked += 1
+        self.assertEqual(checked, 6*(5+4))   # Six drivers, laps 23 to 27 and 51 to 54.
+
+    def test_every_drawn_pit_span_matches_the_prepared_visits(self):
+        spans = evaluate(self.page('pitclock'), 'D.pits')
+        visits = pd.read_csv(ROOT/'data/processed/austria-2026/pit_visits.csv').set_index(['Driver', 'EntryLap'])
+        self.assertEqual(len(spans), 14)
+        for span in spans:
+            row = visits.loc[(span['driver'], span['entryLap'])]
+            self.assertAlmostEqual(span['entry'], row.EntrySeconds, places=3)
+            self.assertAlmostEqual(span['exit'], row.ExitSeconds, places=3)
+            self.assertAlmostEqual(span['elapsed'], row.PitLaneElapsedSeconds, places=3)
+
+    @unittest.skipUnless((ROOT/'data/raw/austria-2026/track_status.csv').exists(), 'needs the raw track-status file')
+    def test_vsc_phases_match_the_raw_track_status(self):
+        raw = pd.read_csv(ROOT/'data/raw/austria-2026/track_status.csv')
+        raw['S'] = pd.to_timedelta(raw.Time).dt.total_seconds()
+        starts, endings = raw[raw.Message == 'VSCDeployed'].S.tolist(), raw[raw.Message == 'VSCEnding'].S.tolist()
+        clears = [raw[(raw.Message == 'AllClear') & (raw.S > t)].S.iloc[0] for t in endings]
+        for drawn, start, ending, clear in zip(evaluate(self.page('event', 800), 'D.events'), starts, endings, clears):
+            self.assertAlmostEqual(drawn['start'], start, places=3)
+            self.assertAlmostEqual(drawn['ending'], ending, places=3)
+            self.assertAlmostEqual(drawn['clear'], clear, places=3)
+
+    def test_the_normal_lap_line_is_the_median_of_all_normal_racing_laps(self):
+        normal = evaluate(self.page('event', 800), 'D.normalLap')
+        self.assertAlmostEqual(normal, self.laps[self.laps.EligibleForPace].LapTimeSeconds.median(), places=6)
 
     def test_pace_view_shows_sample_counts_and_teammate_shapes(self):
         drawn = render(self.page('pace', 400))
@@ -133,7 +191,7 @@ class ReplayRenderTests(unittest.TestCase):
     def test_every_replay_draws(self):
         for kind, height in [('timeline', 400), ('pace', 400), ('tyres', 650), ('pitclock', 480), ('event', 800), ('positions', 420)]:
             with self.subTest(kind):
-                self.assertIn('<defs>', render(self.page(kind, height)))
+                self.assertIn('<text', render(self.page(kind, height)))
 
 
 if __name__ == '__main__':

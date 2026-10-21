@@ -149,17 +149,17 @@ def pit_slide() -> None:
     if close:
         text += ' ' + ' '.join(f"{v['driver']}'s lap {v['entryLap']} stop ended just {v['nearest']:.3f} s before it began, too close to call." for v in close)
     explain(text, ['Each <b>coloured bar</b> is one car driving through the <b>pit lane</b> (the road where cars change tyres), from entering to leaving.',
-                   'The <b>yellow zone</b> is a Virtual Safety Car period: <b>deployed</b> means cars must slow down, <b>ending</b> means racing is about to restart and <b>clear</b> means racing again.',
-                   'The badges say how each stop with a VSC flag relates to the real VSC period.'],
+                   'The <b>yellow zone</b> is a Virtual Safety Car (VSC) period. It begins at <b>VSC starts</b>, when every car must slow down; the lighter part after <b>VSC ending</b> is the last stretch before <b>racing again</b>.',
+                   'The badge says how each flagged stop relates to the real VSC period, using the recorded times.'],
             ['A VSC flag on a lap only means the VSC happened at some point during that lap.',
              'The ringed stops are the ones with a flag. The bars are placed by recorded times, so you can see who really stopped inside the yellow zone.'])
     st.write(f'Of the {len(visits_clock)} pit visits shown, {flagged} have a VSC flag on the entry or exit lap, '
              f"but {len(overlapping)} {'overlaps' if len(overlapping) == 1 else 'overlap'} a VSC in the recorded timestamps.")
     n = laps.Driver.nunique()
     st.iframe(replay.html(laps, 'pitclock', mode, 200+48*n), height=210+48*n)
-    st.caption('Each bar is a pit visit from pit-lane entry to exit on the session clock, set against the deployed and ending phases '
-               'of each VSC. A visit within 1 second of a boundary is marked as a near-boundary case; that rule is a caution, not a '
-               'measured accuracy. Pit-lane time is the whole trip through the pit lane, not the stationary stop or the time lost.')
+    st.caption('Each bar is one pit-lane visit, from entering to leaving, placed on the recorded session clock against the phases of '
+               'each VSC. A visit within 1 second of a VSC edge is called too close to call: that rule is a caution, not a measured '
+               'accuracy. The bar is the whole trip through the pit lane, not the time the car stood still or the time lost.')
     st.markdown('##### Pit visits and the VSC clock')
     st.dataframe(pit_clock_table(visits_clock, laps.drop_duplicates('Driver').set_index('Driver').Team),
                  hide_index=True, width='stretch')
@@ -170,23 +170,23 @@ def event_slide() -> None:
     window = pd.concat([laps[laps.LapNumber.between(c['before'], c['after'])] for c in clock]) if clock else laps.iloc[0:0]
     valid = window[~(window.IsFirstLap | window.IsPitInLap | window.IsPitOutLap)]
     if len(valid):
-        slowest, normal = valid.loc[valid.LapTimeSeconds.idxmax()], valid[~valid.HasVSC].LapTimeSeconds.median()
+        slowest, normal = valid.loc[valid.LapTimeSeconds.idxmax()], pace.LapTimeSeconds.median()
         text = (f"When the VSC began, lap times jumped: the slowest lap was {slowest.Driver}'s lap {int(slowest.LapNumber)} at "
-                f'{slowest.LapTimeSeconds:.1f} s, against about {normal:.0f} s for a normal lap.')
+                f'{slowest.LapTimeSeconds:.1f} s, against about {normal:.0f} s for a typical normal racing lap.')
     else:
         text = 'No VSC laps for the selected teams.'
-    explain(text, ['There is one set of panels for each VSC. The clock starts at <b>0 s</b>, the moment the VSC was deployed, so left of 0 is before it.',
-                   'Top row: lap times. Middle row: race position (1 = leading). Bottom row: how many seconds behind the first car to finish that lap.',
-                   'Each dot is one lap finished by one car, and the yellow zone is the VSC.'],
-            ['The laps inside the yellow zone are far slower than the dashed normal-lap line.',
+    explain(text, ['There is one set of panels for each VSC. The clock shows seconds since that VSC started (<b>0 s</b>), so left of 0 is before it.',
+                   'Top row: lap times. Middle row: race position (1 = leading). Bottom row: seconds behind the first car to finish that lap.',
+                   'Each dot is one lap finished by one car. A <b>hollow dot</b> is a lap that included a pit stop.'],
+            ['The laps inside the yellow zone are far slower than the dashed line, which marks a typical normal racing lap of the whole race.',
              'Positions and gaps also move because cars were pitting at the same time. This shows what happened, not what the VSC caused.'])
     vsc = laps.loc[laps.HasVSC, 'LapNumber']
     st.write(f'VSC periods affected laps {lap_ranges(vsc)}. These laps are left out of pace comparisons but belong in the event '
              'explanation, so every non-pit affected lap is kept here.' if len(vsc) else 'No VSC laps for the selected teams.')
     st.iframe(replay.html(laps, 'event', mode, 800), height=810)
-    st.caption('Points sit at observed lap completions on the session clock, with no interpolation between laps. The interval is '
-               'the seconds behind the first car of the whole field to complete that lap, a same-lap comparison and not a live gap. '
-               'Changes across these windows include pit activity and other racing, so they do not isolate the effect of the VSC.')
+    st.caption('Each dot sits at the moment a car finished a lap, with nothing drawn between laps. The bottom row compares cars on the '
+               'same lap: seconds behind the first car of the whole field to finish it, which is not a live gap. Changes across these '
+               'windows include pit activity and other racing, so they do not isolate the effect of the VSC.')
 
 
 def positions_slide() -> None:
