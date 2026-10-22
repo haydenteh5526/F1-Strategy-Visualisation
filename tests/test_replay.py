@@ -45,8 +45,11 @@ NODE = r"""
 const vm = require('vm'); let src = '';
 process.stdin.on('data', chunk => src += chunk).on('end', () => {
   const svg = {clientWidth: Number(process.env.WIDTH || 1240), innerHTML: '', style: {}};
+  const eventHandlers = {};
   const context = vm.createContext({document: {getElementById: id => id === 'chart' ? svg : {classList: {}}}, console,
-                                    matchMedia: () => ({matches: true}), requestAnimationFrame: () => {}, addEventListener: () => {}});
+                                    svg, eventHandlers,
+                                    matchMedia: () => ({matches: process.env.REDUCED_MOTION !== '0'}),
+                                    requestAnimationFrame: () => {}, addEventListener: (name, handler) => eventHandlers[name] = handler});
   vm.runInContext(src, context);  // Reduced motion, so this draws the finished race.
   const [mode, arg] = [process.argv[1], process.argv[2]];
   if (mode === 'eval') return process.stdout.write(JSON.stringify(vm.runInContext(arg, context)));
@@ -56,10 +59,11 @@ process.stdin.on('data', chunk => src += chunk).on('end', () => {
 """
 
 
-def run_node(page: str, *args: str, width: int = 1240) -> str:
+def run_node(page: str, *args: str, width: int = 1240, reduced_motion: bool = True) -> str:
     script = re.search(r'<script>(.*)</script>', page, re.S).group(1)
-    return subprocess.run(['node', '-e', NODE, *args], input=script, capture_output=True, text=True, check=True,
-                          env={**os.environ, 'WIDTH': str(width)}).stdout
+    return subprocess.run(['node', '-e', NODE, *args], input=script, capture_output=True, text=True,
+                          encoding='utf-8', check=True,
+                          env={**os.environ, 'WIDTH': str(width), 'REDUCED_MOTION': '1' if reduced_motion else '0'}).stdout
 
 
 def render(page: str, at: float | None = None, width: int = 1240) -> str:
@@ -78,6 +82,27 @@ class ReplayRenderTests(unittest.TestCase):
     def setUpClass(cls):
         cls.laps = charts.load_data(ROOT/'data/processed/austria-2026')['laps']
         cls.page = lambda self, kind, height=480: replay.html(self.laps, kind, 'dark', height)
+
+    def test_node_round_trips_unicode_independently_of_system_encoding(self):
+        text = '\u2714 VSC \u00b7 \u26a0 boundary'
+        page = '<script>document.getElementById("chart").innerHTML = ' + json.dumps(text, ensure_ascii=False) + ';</script>'
+        self.assertEqual(run_node(page, 'end'), text)
+
+    def test_resize_redraws_animated_views_at_the_current_race_time(self):
+        for kind in ['timeline', 'pace', 'tyres', 'positions']:
+            for fraction in [.4, 1]:
+                with self.subTest(kind=kind, fraction=fraction):
+                    expression = '''(() => {
+                      const t = D.t0 + FRACTION * (D.t1 - D.t0);
+                      frame(t); const before = svg.innerHTML;
+                      svg.clientWidth = 700; eventHandlers.resize(); const after = svg.innerHTML;
+                      const keptTime = currentTime === t;
+                      frame(t);
+                      return {changed: before !== after, matches: after === svg.innerHTML, keptTime};
+                    })()'''.replace('FRACTION', str(fraction))
+                    result = json.loads(run_node(self.page(kind, 650), 'eval', expression,
+                                                 width=1240, reduced_motion=False))
+                    self.assertEqual(result, {'changed': True, 'matches': True, 'keptTime': True})
 
     def test_event_view_draws_the_affected_laps_and_both_windows(self):
         drawn = render(self.page('event', 800))
