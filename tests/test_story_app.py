@@ -101,6 +101,35 @@ class StoryAppTests(unittest.TestCase):
         self.go_to(4)
         self.assertTrue(any('laps 24–26, 52–53' in text.value for text in self.app.markdown))
 
+    def test_matched_pace_filter_and_empty_selection(self):
+        self.go_to(1)
+        self.app.radio[0].set_value('Matched race windows').run()
+        table = self.app.dataframe[0].value.set_index('A − B')
+        self.assertEqual(table.loc['ANT − RUS', 'Matched pairs'], 16)
+        self.assertAlmostEqual(table.loc['ANT − RUS', 'Median A − B (s)'], .155)
+        self.app.multiselect[0].set_value(['Mercedes']).run()
+        self.app.selectbox[0].set_value('61–71').run()
+        self.app.selectbox[1].set_value('HARD').run()
+        row = self.app.dataframe[0].value.iloc[0]
+        self.assertEqual(row['Matched pairs'], 11)
+        self.assertAlmostEqual(row['Median A − B (s)'], -.883)
+        self.assertEqual(row['Min tyre age A − B (laps)'], -8)
+        self.app.selectbox[1].set_value('SOFT').run()
+        self.assertFalse(self.app.exception)
+        self.assertEqual(len(self.app.get('vega_lite_chart')), 0)
+        self.assertTrue(any('Missing pairs are not zero differences' in box.value for box in self.app.info))
+
+    def test_tyre_table_retains_used_set_and_all_stint_laps(self):
+        self.app.multiselect[0].set_value(['Ferrari']).run()
+        self.go_to(2)
+        table = self.app.dataframe[0].value
+        self.assertEqual(set(table.Team), {'Ferrari'})
+        used = table.loc[table.Driver.eq('HAM') & table['Stint number'].eq(3)].iloc[0]
+        self.assertEqual(used['Recorded laps'], 17)
+        self.assertEqual(used['Eligible laps'], 15)
+        self.assertEqual(used['Starting tyre age (laps)'], 3)
+        self.assertFalse(used['Fresh set at start'])
+
 
 if __name__ == '__main__':
     unittest.main()

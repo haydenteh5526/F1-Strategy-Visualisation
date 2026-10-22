@@ -100,6 +100,10 @@ def overview_slide() -> None:
 
 
 def pace_slide() -> None:
+    comparison = st.radio('Pace comparison', ['Whole-race overview', 'Matched race windows'], horizontal=True)
+    if comparison == 'Matched race windows':
+        matched_pace_slide()
+        return
     ranked = charts.pace_summary(pace).sort_values('Typical')
     fast, slow = ranked.iloc[0], ranked.iloc[-1]
     steady = ranked.assign(Spread=ranked.High-ranked.Low).sort_values('Spread').iloc[0]
@@ -110,12 +114,42 @@ def pace_slide() -> None:
              'Only normal racing laps count: not lap 1, not pit-stop laps, and not laps under a VSC or yellow flag.'],
             [f'<b>{steady.Driver}</b> had the steadiest laps (the shortest bar).',
              'A small gap does not show who had the better strategy: fuel, traffic and conditions are not accounted for.'])
-    st.write(f'Compares {len(pace)} normal racing laps. '
+    st.write(f'Whole-race context: compares {len(pace)} normal racing laps across different compounds and tyre ages. '
              'Lap 1, pit-stop laps, VSC and yellow-flag laps, and deleted laps are left out.')
     st.iframe(replay.html(laps, 'pace', mode, 56*laps.Driver.nunique()+80), height=56*laps.Driver.nunique()+90)
     st.caption("The bar covers the middle half of each driver's normal racing laps, the dot or triangle marks their typical lap "
                'and the count is the number of laps behind it. Lower times are faster; a shorter bar means more consistent pace, '
                'not a better strategy. Fuel load, traffic and conditions are not controlled.')
+
+
+def matched_pace_slide() -> None:
+    explain('Matching race lap and compound can reveal patterns hidden by whole-race summaries.',
+            ['Each point compares two team-mates on the <b>same race laps and compound</b>, with both laps eligible.',
+             '<b>A − B</b>: a negative value means A was faster; a positive value means B was faster. The dashed line is zero.',
+             'The point is the median of the paired differences, not a difference between whole-race medians.'],
+            ['The count is the number of matched lap pairs. A diamond warns that there are fewer than five.',
+             'Tyre ages can still differ. Fuel, traffic and car differences remain uncontrolled.'])
+    summary = charts.matched_pace(laps)
+    window = st.selectbox('Race window (laps)', ['1–20', '21–40', '41–60', '61–71'])
+    compound = st.selectbox('Matched compound', charts.COMPOUNDS, index=1)
+    selected = summary.loc[summary.Window.eq(window) & summary.Compound.eq(compound)]
+    if selected.empty:
+        st.info('No same-lap, same-compound eligible teammate pairs for this selection. Missing pairs are not zero differences.')
+        return
+    st.altair_chart(charts.matched_pace_chart(selected, mode), width='stretch')
+    table = selected[['Pair', 'Team', 'MatchedLaps', 'MedianDifferenceSecondsAminusB',
+                      'MinimumTyreAgeDifference', 'MaximumTyreAgeDifference']].rename(columns={
+        'Pair': 'A − B', 'MatchedLaps': 'Matched pairs',
+        'MedianDifferenceSecondsAminusB': 'Median A − B (s)',
+        'MinimumTyreAgeDifference': 'Min tyre age A − B (laps)',
+        'MaximumTyreAgeDifference': 'Max tyre age A − B (laps)'})
+    st.dataframe(table, hide_index=True, width='stretch', column_config={
+        'Median A − B (s)': st.column_config.NumberColumn(format='%.3f'),
+        'Min tyre age A − B (laps)': st.column_config.NumberColumn(format='%.0f'),
+        'Max tyre age A − B (laps)': st.column_config.NumberColumn(format='%.0f')})
+    st.caption('Tyre-age differences use the same A − B direction: negative means A used younger tyres. '
+               'The minimum and maximum describe the matched laps, not uncertainty bounds. '
+               'Pairs absent from a window are omitted; fewer than five pairs is a sample-size caution, not a significance test.')
 
 
 def tyre_slide() -> None:
@@ -131,6 +165,15 @@ def tyre_slide() -> None:
     st.iframe(replay.html(laps, 'tyres', mode, 190*panel_rows+90), height=190*panel_rows+100)
     st.caption('Each dot is one normal racing lap, coloured by tyre and labelled with its stint and lap count. '
                'Lines are not drawn across the laps that are left out. Sparse stints may not support a trend.')
+    st.markdown('##### Recorded stints and eligible observations')
+    context = charts.stint_context(laps).rename(columns={
+        'Stint': 'Stint number', 'FirstLap': 'First race lap', 'LastLap': 'Last race lap',
+        'RecordedLaps': 'Recorded laps', 'EligibleLaps': 'Eligible laps',
+        'FreshTyreAtStart': 'Fresh set at start', 'FirstRecordedTyreAge': 'Starting tyre age (laps)',
+        'LastRecordedTyreAge': 'Ending tyre age (laps)'})
+    st.dataframe(context, hide_index=True, width='stretch')
+    st.caption('Recorded laps count every lap in the stint; eligible laps count only the dots used for pace analysis. '
+               'Used sets can start above age one. Stint number distinguishes consecutive sets of the same compound.')
 
 
 def pit_slide() -> None:
