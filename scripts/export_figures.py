@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+import textwrap
 
 import altair as alt
 
@@ -13,6 +14,16 @@ import charts  # noqa: E402
 DATA = ROOT/'data/processed/austria-2026'
 OUT = ROOT/'figures/austria-2026'
 INK, GRID = '#31333f', '#e6eaf1'
+# Units and filtering context printed under each title, so an image still makes sense on its own.
+NORMAL = 'Normal racing laps only: no lap 1, pit-stop, VSC or yellow-flag laps, and no deleted or flagged laps.'
+NOTES = {
+    'stint-timeline': 'Bars are stints on one set of tyres (S soft, M medium, H hard); gaps are pit stops; grey bands are VSC laps. Axis in laps.',
+    'pace': NORMAL + ' Times in seconds; dot = median, bar = middle half of laps.',
+    'pace-matched': 'Only eligible normal-racing laps are paired. Tyre ages, fuel and traffic remain uncontrolled. Diamond = fewer than 5 pairs; empty = no pairs.',
+    'tyre-age': NORMAL + ' Tyre age counts laps on a set, not wear; fuel and traffic are not controlled.',
+    'positions': 'Position after each lap (1 = leading); dots mark the lap a driver entered the pits; solid and dashed lines are team-mates; grey bands are VSC laps.',
+    'vsc': 'Lap times in seconds; grey bands are laps with a VSC flag. Slower laps here are not used in pace comparisons.',
+}
 
 
 def figures(data: dict) -> dict[str, alt.TopLevelMixin]:
@@ -34,17 +45,15 @@ def figures(data: dict) -> dict[str, alt.TopLevelMixin]:
         'positions': (charts.position_chart(laps, visits, 'light'), 'Position by lap, with pit stops'),
         'vsc': (charts.vsc_chart(laps, 'light'), 'Lap times around Virtual Safety Car periods'),
     }
-    return {name: static(chart, title) for name, (chart, title) in titled.items()}
+    source = f"Source: FastF1 {data['summary']['provenance']['fastf1_version']}, Austria 2026 race timing (retained snapshot)."
+    return {name: static(chart, title, [source, *textwrap.wrap(NOTES[name], 105)]) for name, (chart, title) in titled.items()}
 
 
-def static(chart: alt.TopLevelMixin, title: str) -> alt.TopLevelMixin:
+def static(chart: alt.TopLevelMixin, title: str, notes: list[str]) -> alt.TopLevelMixin:
     """Fixed light styling so exported images look the same on every machine."""
     if not isinstance(chart, (alt.FacetChart, alt.VConcatChart)):
         chart = chart.properties(width=760)
-    notes = ['Source: retained FastF1 3.8.3 Austria 2026 snapshot. Only eligible normal-racing laps are paired.',
-             'Tyre ages, fuel and traffic remain uncontrolled. Diamond = fewer than 5 pairs; empty = no pairs.']
-    title_args = {'subtitle': notes, 'subtitleColor': INK} if 'Matched race windows' in title else {}
-    return chart.properties(title=alt.Title(title, anchor='start', fontSize=15, color=INK, **title_args)).configure(
+    return chart.properties(title=alt.Title(title, anchor='start', fontSize=15, color=INK, subtitle=notes, subtitleColor=INK)).configure(
         background='#ffffff', font='Arial').configure_view(stroke=None).configure_axis(
         labelColor=INK, titleColor=INK, gridColor=GRID, domainColor=GRID, tickColor=GRID).configure_legend(
         labelColor=INK, titleColor=INK).configure_header(labelColor=INK).configure_text(color=INK)

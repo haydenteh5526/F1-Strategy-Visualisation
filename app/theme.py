@@ -5,6 +5,7 @@ from html import escape
 from urllib.parse import quote
 
 RED = '#e10600'
+KICKER = '#ff6b63'  # A lighter red for small caps labels: the brand red is below 4.5:1 on the dark panels.
 LIGHTS_OUT = 2.4  # Seconds until the start lights go out and the car launches.
 REVEAL = 2.4  # Seconds for a chart to race in from left to right.
 
@@ -45,7 +46,7 @@ STYLE = f'''<style>
 .f1-hero .lights {{ display: flex; gap: 10px; margin-bottom: 16px; }}
 .f1-hero .light {{ width: 20px; height: 20px; border-radius: 50%; background: #34343e;
   box-shadow: inset 0 0 0 2px #0008; animation: light-on .12s var(--on) forwards, light-out .15s {LIGHTS_OUT}s forwards; }}
-.f1-hero .kicker {{ font-size: 13px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: {RED};
+.f1-hero .kicker {{ font-size: 13px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: {KICKER};
   animation: rise .6s ease-out .1s both; }}
 .f1-hero h1 {{ font-family: inherit; font-size: clamp(30px, 4.4vw, 52px); font-weight: 900; line-height: 1.05;
   margin: 4px 0 6px; padding: 0; font-style: italic; text-transform: uppercase; animation: rise .6s ease-out .25s both; }}
@@ -73,12 +74,12 @@ STYLE = f'''<style>
 .f1-takeaway {{ margin: 6px 0 14px; padding: 16px 20px; border-left: 6px solid {RED}; border-radius: 6px;
   background: linear-gradient(90deg, #2a1416, #1f1f2b 60%); font-family: 'Titillium Web', system-ui, sans-serif; color: #f0efec;
   animation: rise .5s ease-out both; }}
-.f1-takeaway .kicker {{ font-size: 12px; font-weight: 700; letter-spacing: .2em; color: {RED}; text-transform: uppercase; }}
+.f1-takeaway .kicker {{ font-size: 12px; font-weight: 700; letter-spacing: .2em; color: {KICKER}; text-transform: uppercase; }}
 .f1-takeaway .big {{ font-size: clamp(19px, 2.2vw, 26px); font-weight: 700; line-height: 1.3; margin-top: 4px; }}
 .f1-guide {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 14px;
   font-family: 'Titillium Web', system-ui, sans-serif; color: #f0efec; }}
 .f1-guide > div {{ background: #1b1b25; border-radius: 6px; padding: 12px 16px; }}
-.f1-guide h4 {{ margin: 0 0 6px; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #c3c2b7; }}
+.f1-guide h3 {{ margin: 0 0 6px; padding: 0; border: 0; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #c3c2b7; }}
 .f1-guide ul {{ margin: 0; padding-left: 18px; font-size: 15px; line-height: 1.5; }}
 .f1-guide li b {{ color: #fff; }}
 .f1-flag {{ height: 10px; border-radius: 3px; margin: 8px 0;
@@ -91,15 +92,17 @@ STYLE = f'''<style>
 
 .st-key-chart-frame {{ border-top: 3px solid {RED} !important; overflow: hidden;
   background: repeating-linear-gradient(45deg, #1a1a23 0 7px, #17171f 7px 14px) !important; }}
-.st-key-chart-frame h3 {{ font-family: 'Titillium Web', system-ui, sans-serif; font-style: italic; text-transform: uppercase;
+.st-key-chart-frame h2, .st-key-chart-frame h3 {{ font-family: 'Titillium Web', system-ui, sans-serif; font-style: italic; text-transform: uppercase;
   letter-spacing: .02em; border-left: none; padding-left: 0; }}
 .st-key-previous button, .st-key-next button {{ width: 46px; height: 46px; border-radius: 50%; border: none;
   background: {RED}; color: #fff; box-shadow: 0 0 0 0 {RED}00; transition: transform .15s, box-shadow .2s; }}
 .st-key-previous button:hover, .st-key-next button:hover, .st-key-previous button:focus, .st-key-next button:focus {{
   transform: scale(1.1); box-shadow: 0 0 18px {RED}; background: {RED} !important; color: #fff !important; }}
 .st-key-previous button:active, .st-key-next button:active {{ transform: scale(.94); }}
+.st-key-previous button:focus-visible, .st-key-next button:focus-visible, .st-key-chart-frame iframe:focus-visible,
+.st-key-chart-frame a:focus-visible, .st-key-chart-frame input:focus-visible, .st-key-chart-frame select:focus-visible {{ outline: 3px solid #ffffff; outline-offset: 3px; }}
 .f1-progress {{ display: flex; align-items: center; gap: 14px; font-family: 'Titillium Web', system-ui, sans-serif; }}
-.f1-progress .kicker {{ font-size: 12px; font-weight: 700; letter-spacing: .18em; color: {RED}; text-transform: uppercase; }}
+.f1-progress .kicker {{ font-size: 12px; font-weight: 700; letter-spacing: .18em; color: {KICKER}; text-transform: uppercase; }}
 .f1-progress .segs {{ display: flex; gap: 5px; }}
 .f1-progress .seg {{ width: 34px; height: 5px; border-radius: 3px; background: #34343e; transform: skewX(-20deg); }}
 .f1-progress .seg.done {{ background: #6a1a1c; }}
@@ -152,7 +155,7 @@ def hero(kicker: str, title: str, subtitle: str) -> str:
                     for top, width, delay in [(22, 40, 0), (48, 55, .35), (70, 35, .7), (86, 50, .2)])
     dust = ''.join(f'<span style="--d:{LIGHTS_OUT+delay}s;left:{left}px"></span>'
                    for left, delay in [(40, 0), (70, .08), (20, .16)])
-    return (f'<div class="f1-hero" role="img" aria-label="{escape(title)}">'
+    return (f'<div class="f1-hero">'
             f'<div class="lights" aria-hidden="true">{lights}</div>'
             f'<div class="kicker">{escape(kicker)}</div><h1>{escape(title)}</h1><div class="sub">{escape(subtitle)}</div>'
             f'<div class="speed" aria-hidden="true">{speed}</div><div class="dust" aria-hidden="true">{dust}</div>'
@@ -185,6 +188,10 @@ def slide_progress(index: int, names: list[str]) -> str:
 SCROLL_KEEPER = """<script>
 (() => {
   const app = window.parent, KEY = 'f1-story-scroll';
+  // The arrow buttons only hold an icon, so give them names a screen reader can announce.
+  const label = () => { for (const [key, text] of [['previous', 'Previous chart'], ['next', 'Next chart']])
+    app.document.querySelectorAll('.st-key-' + key + ' button').forEach(b => b.setAttribute('aria-label', text)); };
+  label(); new app.MutationObserver(label).observe(app.document.body, {childList: true, subtree: true});
   const main = () => app.document.querySelector('[data-testid="stMain"]');
   const nav = app.performance.getEntriesByType('navigation')[0];
   const target = nav && nav.type === 'reload' ? Number(app.sessionStorage.getItem(KEY) || 0) : 0;
@@ -210,8 +217,8 @@ def guide(takeaway: str, read: list[str], notice: list[str]) -> str:
     """Plain-English box for a slide: the one-sentence takeaway, how to read the chart and what to notice."""
     items = lambda lines: ''.join(f'<li>{line}</li>' for line in lines)  # Lines may carry <b> tags; callers escape data.
     return (f'<div class="f1-takeaway"><div class="kicker">Key takeaway</div><div class="big">{takeaway}</div></div>'
-            f'<div class="f1-guide"><div><h4>How to read this</h4><ul>{items(read)}</ul></div>'
-            f'<div><h4>What to notice</h4><ul>{items(notice)}</ul></div></div>')
+            f'<div class="f1-guide"><div><h3>How to read this</h3><ul>{items(read)}</ul></div>'
+            f'<div><h3>What to notice</h3><ul>{items(notice)}</ul></div></div>')
 
 
 FLAG = '<div class="f1-flag" aria-hidden="true"></div>'
