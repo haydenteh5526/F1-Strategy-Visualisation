@@ -50,6 +50,40 @@ class ContrastTests(unittest.TestCase):
                 with self.subTest(mode=mode, colour=colour):
                     self.assertGreaterEqual(contrast(colour, charts.SURFACE[mode]), 3)
 
+    def test_marks_keep_3_to_1_at_their_actual_opacity(self):
+        """Composite each mark's colour over the surface at the opacity it is drawn with, not at full strength."""
+        data = charts.load_data(ROOT/'data/processed/austria-2026')
+        laps, stints, visits = data['laps'], data['stints'], data['visits']
+        pace = laps[laps.EligibleForPace]
+
+        def marks(node):
+            if isinstance(node, dict):
+                if isinstance(node.get('mark'), dict):
+                    yield node['mark']
+                for value in node.values():
+                    yield from marks(value)
+            elif isinstance(node, list):
+                for value in node:
+                    yield from marks(value)
+
+        for mode in ('dark', 'light'):
+            built = {'pace': charts.pace_chart(pace, mode), 'tyre age': charts.tyre_age_chart(pace, mode),
+                     'vsc': charts.vsc_chart(laps, mode), 'stints': charts.stint_timeline(stints, laps, mode),
+                     'positions': charts.position_chart(laps, visits, mode)}
+            for name, chart in built.items():
+                for mark in marks(chart.to_dict()):
+                    kind, opacity = mark.get('type'), mark.get('opacity', 1)
+                    if kind not in ('point', 'circle', 'bar', 'line') or opacity == 0:
+                        continue   # Text, gridlines and shading are not data marks; opacity 0 is an invisible hover target.
+                    if kind == 'bar' and mark.get('fillOpacity', 1) < 1:
+                        self.assertGreaterEqual(mark.get('strokeWidth', 0), 1, (mode, name))   # A pale fill needs a solid edge.
+                        self.assertEqual(mark.get('strokeOpacity', 1), 1, (mode, name))
+                        continue
+                    for colour in charts.TEAM_COLORS[mode]+charts.COMPOUND_COLORS:
+                        with self.subTest(mode=mode, chart=name, colour=colour, opacity=opacity):
+                            seen = blend(colour, charts.SURFACE[mode], opacity)
+                            self.assertGreaterEqual(contrast(seen, charts.SURFACE[mode]), 3)
+
 
 @unittest.skipUnless(shutil.which('node'), 'needs Node.js to run the replay script')
 class ClippingTests(unittest.TestCase):
@@ -83,6 +117,15 @@ class ClippingTests(unittest.TestCase):
                 with self.subTest(width=width, kind=kind):
                     page = replay.html(self.laps, kind, 'dark', height)
                     self.assertEqual(self.clipped(render(page, width=width), width), [])
+
+    def test_replay_range_bars_have_solid_edges_and_pit_bars_are_opaque(self):
+        pace = render(replay.html(self.laps, 'pace', 'dark', 400), width=1000)
+        bars = re.findall(r'<rect [^>]*fill-opacity="[^"]*"[^>]*>', pace)
+        self.assertEqual(len(bars), 6)
+        self.assertTrue(all('stroke="#' in bar and 'stroke-width="1.5"' in bar for bar in bars))
+        pits = re.findall(r'<rect [^>]*rx="4"[^>]*>', render(replay.html(self.laps, 'pitclock', 'dark', 488), width=1000))
+        self.assertEqual(len(pits), 14)
+        self.assertFalse([pit for pit in pits if 'opacity' in pit])
 
     def test_tyre_panels_use_one_column_on_a_narrow_screen(self):
         page = replay.html(self.laps, 'tyres', 'dark', 650)

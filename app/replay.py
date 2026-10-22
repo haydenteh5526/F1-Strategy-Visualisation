@@ -247,7 +247,7 @@ function paceFrame(k) {  // Each car lays down its driver's middle-half bar; the
     const carX = xs(lo) + travel * (xs(q.high) - xs(lo));
     s += mark(M.l - 62, y, q.color, q.dashed, q.code) + `<text class="label" x="${M.l - 10}" y="${y + 4}" fill="${D.ink}" text-anchor="end">${q.code}</text>`;
     if (carX > xs(q.low))
-      s += `<rect x="${xs(q.low)}" y="${y - 5}" width="${Math.min(carX, xs(q.high)) - xs(q.low)}" height="10" rx="5" fill="${q.color}" opacity=".4"/>`;
+      s += `<rect x="${xs(q.low)}" y="${y - 5}" width="${Math.min(carX, xs(q.high)) - xs(q.low)}" height="10" rx="5" fill="${q.color}" fill-opacity=".4" stroke="${q.color}" stroke-width="1.5"/>`;
     if (carX >= xs(q.typical))
       s += bigMark(xs(q.typical), y, q.color, q.dashed, `${q.code} typical lap ${q.typical.toFixed(3)} s from ${q.n} laps`);
     s += travel < 1 ? car(carX, y, q.color, q.code)
@@ -419,7 +419,7 @@ function pitFrame() {   // Every pit-lane visit against the recorded VSC clock.
     s += `<text class="axis" x="${M.l - 10}" y="${y + 4}" fill="${D.ink}" text-anchor="end">${d.code}</text><line x1="${M.l}" x2="${W - M.r}" y1="${y}" y2="${y}" stroke="${D.grid}"/>`; });
   D.pits.forEach(v => {
     const m = (v.entry - D.t0) / 60, d = teamOf(v.driver), y = oTop + oRow * (D.drivers.indexOf(d) + .5), b = badge(v);
-    s += `<rect x="${ovx(m)}" y="${y - 6}" width="${Math.max(7, ovx(v.elapsed / 60) - ovx(0))}" height="12" rx="4" fill="${d.color}" opacity="${b ? 1 : .6}" stroke="${b ? b.fill : 'none'}" stroke-width="${b ? 2.5 : 0}"><title>${v.driver}, lap ${v.entryLap}: ${v.elapsed.toFixed(1)} s in the pit lane</title></rect>`;
+    s += `<rect x="${ovx(m)}" y="${y - 6}" width="${Math.max(7, ovx(v.elapsed / 60) - ovx(0))}" height="12" rx="4" fill="${d.color}" stroke="${b ? b.fill : 'none'}" stroke-width="${b ? 2.5 : 0}"><title>${v.driver}, lap ${v.entryLap}: ${v.elapsed.toFixed(1)} s in the pit lane</title></rect>`;
   });
   for (let m = 0; m <= oMin; m += 20) s += `<text class="axis" x="${ovx(m)}" y="${oBottom + 16}" fill="${D.ink}" text-anchor="middle">${m}</text>`;
   s += `<text class="axis" x="${M.l + oW / 2}" y="${oBottom + 32}" fill="${D.ink}" text-anchor="middle" font-weight="700">Minutes since the first lap started</text>`;

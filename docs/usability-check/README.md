@@ -22,7 +22,7 @@ Technical checks only. They do not replace the audience sessions in #8.
 | Reading order and headings | Browser accessibility tree checked: H1 page title first, then H2 chart question, H3 guide boxes and sections, H4 table titles; no level skipped. The earlier banner image role that hid the H1 was removed |
 | Screen readers | Every chart frame has a text description; page language is set |
 | Colour is not the only cue | Team-mates use circle/triangle or solid/dashed; tyres carry S/M/H letters; pit visits carry text badges; VSC laps carry rings and labels |
-| Contrast | Small text at least 4.5:1; every team colour and all three tyre colours at least 3:1 on both the dark and white surfaces (automated test, no allowance). Medium (amber) was 2.17:1 on white and the light-mode Mercedes green 2.82:1, so both were darkened (Medium `#cc8400`, light green `#199e70`) |
+| Contrast | Small text at least 4.5:1; every team colour and all three tyre colours at least 3:1 on both the dark and white surfaces (automated test, no allowance), also at the opacity each mark is drawn with. All data marks are now fully opaque; the pale range bars on the pace view keep a solid full-colour outline, so their edges meet 3:1. Pale VSC shading is background, always labelled "VSC", and is not counted as a data mark. Medium (amber) was 2.17:1 on white and the light-mode Mercedes green 2.82:1, so both were darkened (Medium `#cc8400`, light green `#199e70`) |
 | Reduced motion | No running animations; charts are drawn at once with full information |
 | Static exports | All six PNGs re-exported with source, filtering and unit notes under each title; values match the dashboard (same data and chart code) |
 
