@@ -45,8 +45,14 @@ class StoryAppTests(unittest.TestCase):
         self.assertEqual(len(self.app.header), 1)
         banner = next(h.proto.body for h in self.app.get('html') if 'f1-hero' in h.proto.body)
         self.assertIn('<h1>', banner)
+        self.assertNotIn('role="img"', banner)   # An image role would hide the heading from heading navigation.
         guide = next(h.proto.body for h in self.app.get('html') if 'f1-takeaway' in h.proto.body)
         self.assertIn('<h3>How to read this</h3>', guide)
+
+    def test_headings_never_skip_a_level(self):
+        for slide in range(6):   # Page H1, slide H2, guide H3, then at most H4 inside a slide.
+            self.go_to(slide)
+            self.assertFalse([m.value for m in self.app.markdown if m.value.startswith('#####')], slide)
 
     def test_arrows_wrap_around(self):
         self.app.button(key='previous').click().run()

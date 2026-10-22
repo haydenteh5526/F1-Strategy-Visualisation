@@ -155,7 +155,7 @@ def hero(kicker: str, title: str, subtitle: str) -> str:
                     for top, width, delay in [(22, 40, 0), (48, 55, .35), (70, 35, .7), (86, 50, .2)])
     dust = ''.join(f'<span style="--d:{LIGHTS_OUT+delay}s;left:{left}px"></span>'
                    for left, delay in [(40, 0), (70, .08), (20, .16)])
-    return (f'<div class="f1-hero" role="img" aria-label="{escape(title)}">'
+    return (f'<div class="f1-hero">'
             f'<div class="lights" aria-hidden="true">{lights}</div>'
             f'<div class="kicker">{escape(kicker)}</div><h1>{escape(title)}</h1><div class="sub">{escape(subtitle)}</div>'
             f'<div class="speed" aria-hidden="true">{speed}</div><div class="dust" aria-hidden="true">{dust}</div>'

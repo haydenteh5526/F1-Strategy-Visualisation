@@ -95,7 +95,7 @@ def overview_slide() -> None:
     st.caption('Each bar is one stint, starting with its tyre: S (Soft), M (Medium) or H (Hard). '
                'Gaps between bars are pit stops, grey bands are Virtual Safety Car laps and the stripe shows the team. '
                'Stint length is observed use, not tyre wear.')
-    st.markdown('##### Strategy by driver')
+    st.markdown('#### Strategy by driver')
     st.dataframe(strategy_table(laps, stints), hide_index=True, width='stretch')
 
 
@@ -165,7 +165,7 @@ def tyre_slide() -> None:
     st.iframe(replay.html(laps, 'tyres', mode, 190*panel_rows+90), height=190*panel_rows+100, alt=replay.ARIA['tyres'])
     st.caption('Each dot is one normal racing lap, coloured by tyre and labelled with its stint and lap count. '
                'Lines are not drawn across the laps that are left out. Sparse stints may not support a trend.')
-    st.markdown('##### Recorded stints and eligible observations')
+    st.markdown('#### Recorded stints and eligible observations')
     context = charts.stint_context(laps).rename(columns={
         'Stint': 'Stint number', 'FirstLap': 'First race lap', 'LastLap': 'Last race lap',
         'RecordedLaps': 'Recorded laps', 'EligibleLaps': 'Eligible laps',
@@ -203,7 +203,7 @@ def pit_slide() -> None:
     st.caption('Each bar is one pit-lane visit, from entering to leaving, placed on the recorded session clock against the phases of '
                'each VSC. A visit within 1 second of a VSC edge is called too close to call: that rule is a caution, not a measured '
                'accuracy. The bar is the whole trip through the pit lane, not the time the car stood still or the time lost.')
-    st.markdown('##### Pit visits and the VSC clock')
+    st.markdown('#### Pit visits and the VSC clock')
     st.dataframe(pit_clock_table(visits_clock, laps.drop_duplicates('Driver').set_index('Driver').Team),
                  hide_index=True, width='stretch')
 

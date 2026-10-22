@@ -9,11 +9,11 @@ import pandas as pd
 
 TEAMS = ['Red Bull Racing', 'Mercedes', 'Ferrari']
 # Validated categorical slots (blue, aqua, orange) chosen to echo each team's livery.
-TEAM_COLORS = {'light': ['#2a78d6', '#1baf7a', '#eb6834'], 'dark': ['#3987e5', '#199e70', '#d95926']}
+TEAM_COLORS = {'light': ['#2a78d6', '#199e70', '#eb6834'], 'dark': ['#3987e5', '#199e70', '#d95926']}
 # F1 convention (red, yellow, white) stepped to stay readable; Hard is a neutral grey on purpose,
 # so every tyre mark also carries its S/M/H letter.
 COMPOUNDS = ['SOFT', 'MEDIUM', 'HARD']
-COMPOUND_COLORS = ['#e34948', '#eda100', '#898781']
+COMPOUND_COLORS = ['#e34948', '#cc8400', '#898781']
 VSC_FILL = '#898781'
 STATUS_COLUMNS = {'TrackStatus': str, 'EntryTrackStatus': str, 'ExitTrackStatus': str}
 SURFACE = {'light': '#ffffff', 'dark': '#15151e'}

@@ -46,9 +46,9 @@ class ContrastTests(unittest.TestCase):
 
     def test_chart_marks_meet_3_to_1_on_both_surfaces(self):
         for mode in ('dark', 'light'):
-            for colour in charts.TEAM_COLORS[mode]+[charts.COMPOUND_COLORS[0], charts.COMPOUND_COLORS[2]]:
+            for colour in charts.TEAM_COLORS[mode]+charts.COMPOUND_COLORS:   # Every team colour and all three tyre colours.
                 with self.subTest(mode=mode, colour=colour):
-                    self.assertGreaterEqual(contrast(colour, charts.SURFACE[mode]), 2.8 if mode == 'light' else 3)
+                    self.assertGreaterEqual(contrast(colour, charts.SURFACE[mode]), 3)
 
 
 @unittest.skipUnless(shutil.which('node'), 'needs Node.js to run the replay script')
