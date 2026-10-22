@@ -10,6 +10,7 @@ from streamlit.testing.v1 import AppTest
 APP = Path(__file__).resolve().parents[1]/'app/story.py'
 sys.path.insert(0, str(APP.parent))
 import charts  # noqa: E402
+import replay  # noqa: E402
 
 
 class StoryAppTests(unittest.TestCase):
@@ -25,11 +26,27 @@ class StoryAppTests(unittest.TestCase):
         titles = set()
         for slide in range(6):
             self.go_to(slide)
-            replays = [f for f in self.app.get('iframe') if 'Race replay' in str(f.proto)]
+            replays = [f for f in self.app.get('iframe') if f.proto.alt in replay.ARIA.values()]
             charts_shown = len(self.app.get('vega_lite_chart'))+len(replays)
             self.assertEqual(charts_shown, 1)
-            titles.add(self.app.subheader[0].value)
+            titles.add(self.app.header[0].value)
         self.assertEqual(len(titles), 6)
+
+    def test_every_chart_frame_has_its_own_description_for_screen_readers(self):
+        for slide in range(6):
+            self.go_to(slide)
+            described = [f for f in self.app.get('iframe') if f.proto.alt in replay.ARIA.values()]
+            self.assertEqual(len(described), 1, slide)
+            self.assertIn(f'aria-label="{described[0].proto.alt}"', described[0].proto.srcdoc)   # The frame and its drawing agree.
+        self.assertEqual(len(set(replay.ARIA.values())), len(replay.ARIA))   # No two views share a description.
+
+    def test_slide_titles_are_second_level_headings_below_the_page_title(self):
+        self.go_to(2)
+        self.assertEqual(len(self.app.header), 1)
+        banner = next(h.proto.body for h in self.app.get('html') if 'f1-hero' in h.proto.body)
+        self.assertIn('<h1>', banner)
+        guide = next(h.proto.body for h in self.app.get('html') if 'f1-takeaway' in h.proto.body)
+        self.assertIn('<h3>How to read this</h3>', guide)
 
     def test_arrows_wrap_around(self):
         self.app.button(key='previous').click().run()
@@ -68,7 +85,7 @@ class StoryAppTests(unittest.TestCase):
         order = []
         for slide in range(6):
             self.go_to(slide)
-            order.append(self.app.subheader[0].value)
+            order.append(self.app.header[0].value)
         self.assertEqual([title.split('.')[0] for title in order[:5]], ['1', '2', '3', '4', '5'])
         self.assertTrue(order[5].startswith('Extra'))
 
@@ -96,6 +113,15 @@ class StoryAppTests(unittest.TestCase):
         self.assertIn('only 1 (HAM on lap 25)', takeaway())
         self.go_to(4)
         self.assertIn("HAD's lap 25 at 100.5 s, against about 72 s for a typical normal racing lap", takeaway())
+
+    def test_page_defines_terms_cites_sources_and_keeps_the_boundary_case(self):
+        text = ' '.join(m.value for m in self.app.markdown)
+        for term in ('Stint', 'Compound', 'Tyre age', 'Pace eligibility', 'Virtual Safety Car (VSC)', 'Lap-boundary interval'):
+            self.assertIn(f'**{term}**', text)
+        self.assertIn('Sources', [h.value for h in self.app.subheader])
+        self.assertIn('FastF1', text)
+        self.assertIn('too close to call', text)
+        self.assertNotIn('live gap', text.replace('not live gaps', ''))
 
     def test_vsc_laps_are_summarised(self):
         self.go_to(4)

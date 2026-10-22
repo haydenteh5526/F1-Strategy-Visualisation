@@ -24,7 +24,7 @@ GLOSSARY = {
                      'not just the time the car is stationary.',
     'Lap-boundary interval': 'How long after the leader a driver finished the same lap. '
                              'It is measured once per lap at the finish line, not live.',
-    'Normal racing lap': 'A lap used for pace comparisons: not lap 1, not a pit-stop lap, no VSC or yellow flag, '
+    'Pace eligibility': 'Whether a lap counts in pace comparisons. A normal racing lap is eligible: not lap 1, not a pit-stop lap, no VSC or yellow flag, '
                          'and not deleted or flagged by the timing data.',
 }
 
@@ -91,7 +91,7 @@ def overview_slide() -> None:
             [f'<b>{who}</b> stopped the most ({stops.max()} times).' if stops.min() != stops.max() else 'Every driver stopped the same number of times.',
              'This only shows who used which tyre and when. It does not say who was faster.'])
     # Our own HTML built from the prepared data, so it is safe to run as an iframe.
-    st.iframe(replay.html(laps, 'timeline', mode, 52*laps.Driver.nunique()+80), height=52*laps.Driver.nunique()+90)
+    st.iframe(replay.html(laps, 'timeline', mode, 52*laps.Driver.nunique()+80), height=52*laps.Driver.nunique()+90, alt=replay.ARIA['timeline'])
     st.caption('Each bar is one stint, starting with its tyre: S (Soft), M (Medium) or H (Hard). '
                'Gaps between bars are pit stops, grey bands are Virtual Safety Car laps and the stripe shows the team. '
                'Stint length is observed use, not tyre wear.')
@@ -113,10 +113,10 @@ def pace_slide() -> None:
              'A lower time is a faster lap. A shorter bar means steadier lap times.',
              'Only normal racing laps count: not lap 1, not pit-stop laps, and not laps under a VSC or yellow flag.'],
             [f'<b>{steady.Driver}</b> had the steadiest laps (the shortest bar).',
-             'A small gap does not show who had the better strategy: fuel, traffic and conditions are not accounted for.'])
+             'A small difference does not show who had the better strategy: fuel, traffic and conditions are not accounted for.'])
     st.write(f'Whole-race context: compares {len(pace)} normal racing laps across different compounds and tyre ages. '
              'Lap 1, pit-stop laps, VSC and yellow-flag laps, and deleted laps are left out.')
-    st.iframe(replay.html(laps, 'pace', mode, 56*laps.Driver.nunique()+80), height=56*laps.Driver.nunique()+90)
+    st.iframe(replay.html(laps, 'pace', mode, 56*laps.Driver.nunique()+80), height=56*laps.Driver.nunique()+90, alt=replay.ARIA['pace'])
     st.caption("The bar covers the middle half of each driver's normal racing laps, the dot or triangle marks their typical lap "
                'and the count is the number of laps behind it. Lower times are faster; a shorter bar means more consistent pace, '
                'not a better strategy. Fuel load, traffic and conditions are not controlled.')
@@ -162,7 +162,7 @@ def tyre_slide() -> None:
     st.write('Tyre age counts laps on a set, not wear. Cars also get lighter as fuel burns, '
              'so slower or faster laps are not caused by tyres alone.')
     panel_rows = -(-laps.Driver.nunique()//2)
-    st.iframe(replay.html(laps, 'tyres', mode, 190*panel_rows+90), height=190*panel_rows+100)
+    st.iframe(replay.html(laps, 'tyres', mode, 190*panel_rows+90), height=190*panel_rows+100, alt=replay.ARIA['tyres'])
     st.caption('Each dot is one normal racing lap, coloured by tyre and labelled with its stint and lap count. '
                'Lines are not drawn across the laps that are left out. Sparse stints may not support a trend.')
     st.markdown('##### Recorded stints and eligible observations')
@@ -199,7 +199,7 @@ def pit_slide() -> None:
     st.write(f'Of the {len(visits_clock)} pit visits shown, {flagged} have a VSC flag on the entry or exit lap, '
              f"but {len(overlapping)} {'overlaps' if len(overlapping) == 1 else 'overlap'} a VSC in the recorded timestamps.")
     n = laps.Driver.nunique()
-    st.iframe(replay.html(laps, 'pitclock', mode, 200+48*n), height=210+48*n)
+    st.iframe(replay.html(laps, 'pitclock', mode, 200+48*n), height=210+48*n, alt=replay.ARIA['pitclock'])
     st.caption('Each bar is one pit-lane visit, from entering to leaving, placed on the recorded session clock against the phases of '
                'each VSC. A visit within 1 second of a VSC edge is called too close to call: that rule is a caution, not a measured '
                'accuracy. The bar is the whole trip through the pit lane, not the time the car stood still or the time lost.')
@@ -226,11 +226,11 @@ def event_slide() -> None:
                    'An <b>amber ring</b> marks a lap the VSC affected.'],
             ['The amber-ringed laps are far slower than the dashed line, which marks a typical normal racing lap of the whole race.',
              'The yellow zone shows the VSC status at that moment on the clock. A ringed lap can finish after the zone ends, because it was run partly under the VSC.',
-             'Positions and gaps also move because cars were pitting at the same time. This shows what happened, not what the VSC caused.'])
+             'Positions and lap-boundary intervals also move because cars were pitting at the same time. This shows what happened, not what the VSC caused.'])
     vsc = laps.loc[laps.HasVSC, 'LapNumber']
     st.write(f'VSC periods affected laps {lap_ranges(vsc)}. These laps are left out of pace comparisons but belong in the event '
              'explanation, so every non-pit affected lap is kept here.' if len(vsc) else 'No VSC laps for the selected teams.')
-    st.iframe(replay.html(laps, 'event', mode, 800), height=810)
+    st.iframe(replay.html(laps, 'event', mode, 800), height=810, alt=replay.ARIA['event'])
     st.caption('Each dot sits at the moment a car finished a lap, with nothing drawn between laps. The bottom row compares cars on the '
                'same lap: seconds behind the first car of the whole field to finish it, which is not a live gap. Changes across these '
                'windows include pit activity and other racing, so they do not isolate the effect of the VSC.')
@@ -245,7 +245,7 @@ def positions_slide() -> None:
             ['Big drops in a line usually line up with a pit stop dot: the car loses places while it is in the pit lane.',
              'Positions are recorded at the end of each lap, so lines join those points.'])
     st.write('Extra context: where each driver ran lap by lap, with the pit stops marked.')
-    st.iframe(replay.html(laps, 'positions', mode, 420), height=430)
+    st.iframe(replay.html(laps, 'positions', mode, 420), height=430, alt=replay.ARIA['positions'])
     st.caption('Positions are recorded at the end of each lap; the lines join those points and the cars only move along the lap '
                'axis. Dots mark the lap each driver entered the pits. Team-mates share a colour, one solid and one dashed.')
 
@@ -303,7 +303,7 @@ with st.container(border=True, key='chart-frame'):
     right.button(':material/chevron_right:', key='next', help='Next chart', on_click=move, args=(1,))
     title = list(SLIDES)[st.session_state.slide]
     middle.html(theme.slide_progress(st.session_state.slide, list(SLIDES)))
-    middle.subheader(title)
+    middle.header(title, divider=False)
     # A new key per slide and direction remounts the content, which replays the slide-in animation.
     with st.container(key=f'slide-{st.session_state.slide}-{st.session_state.direction}'):
         SLIDES[title]()
@@ -325,7 +325,16 @@ st.markdown(f"""
 st.subheader('Limits')
 st.markdown("""
 - Lap times also depend on fuel load, traffic, track conditions and tyre age, so these views do not prove what caused a result.
-- Gaps are measured once per lap at the finish line, not live.
+- Lap-boundary intervals are measured once per lap at the finish line, not live gaps.
 - Pit-lane time is the whole trip through the pit lane, not the stationary stop or the time lost by stopping.
 - This is one race and six drivers; it does not show which strategy was best.
+- Pit visits within 1 second of a VSC edge (Antonelli, lap 24) are called too close to call, not placed on either side.
+""")
+
+st.subheader('Sources')
+st.markdown(f"""
+1. FastF1 {provenance['fastf1_version']} lap, tyre and track-status timing, accessed {provenance['access_date']}; prepared in `data/processed/austria-2026/`.
+2. [Formula 1 race result]({provenance['official_result']}) for the final order.
+3. VSC session-clock windows and pit-lane times from the team's pit/VSC exploration (`docs/pit-vsc-exploration/`).
+4. Units: lap and pit-lane times in seconds, tyre age in laps, positions as place after each lap.
 """)
