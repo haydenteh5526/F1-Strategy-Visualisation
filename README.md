@@ -52,6 +52,8 @@ The story page follows the design plan: slides 1 to 5 are its five views (stints
 
 On slide 2, choose **Matched race windows**, then a race window and compound. Negative A − B means A was faster; the table reports matched-pair counts and the range of tyre-age differences. Empty selections are stated explicitly. Slide 3 includes every recorded stint with eligible/recorded counts and starting tyre ages. See the [dashboard integration note](docs/dashboard-integration.md) for the view audit and static outputs.
 
+The [draft visual report](docs/visual-report/README.md) connects the five primary views to the evidence, design choices and limitations. The [visual package preparation note](docs/submission-package/README.md) lists the technical contents and remaining acceptance work. Both use the merged integration baseline; pending story/accessibility changes and audience results are not presented as completed work.
+
 ## Data and documentation
 
 Raw laps, weather, results, race-control messages and track-status events remain locally in ignored `data/raw/austria-2026/`. Download caches are also ignored.
