@@ -4,7 +4,7 @@ A group data visualisation project for F1 fans, initially studying the 2026 Aust
 
 ## Current status
 
-The audience brief, data audit, preparation pipeline and story prototype are available. We retain all 426 selected laps and mark 361 as eligible for initial normal-racing pace comparisons. The pit/VSC exploration describes timestamp overlaps and event-window observations; pace/tyre exploration and actual audience feedback remain in progress. No final performance findings have been established.
+The audience brief, data audit, preparation pipeline and story prototype are available. We retain all 426 selected laps and mark 361 as eligible for normal-racing pace comparisons. Pit/VSC and pace/tyre exploration are merged. The dashboard offers whole-race pace context and matched race-window comparisons, with stint accounting alongside the tyre-age view. Audience feedback and the final story remain in progress.
 
 ## Research questions
 
@@ -49,6 +49,8 @@ Save the charts as images in `figures/austria-2026/` for slides and the static s
 ```
 
 The story page follows the design plan: slides 1 to 5 are its five views (stints, pace, tyre age, pit visits and the VSC clock, event context), then an extra positions view. The static images of the pit and VSC views are in `figures/austria-2026/pit-vsc/`, made by `scripts/explore_pit_vsc.py`.
+
+On slide 2, choose **Matched race windows**, then a race window and compound. Negative A − B means A was faster; the table reports matched-pair counts and the range of tyre-age differences. Empty selections are stated explicitly. Slide 3 includes every recorded stint with eligible/recorded counts and starting tyre ages. See the [dashboard integration note](docs/dashboard-integration.md) for the view audit and static outputs.
 
 ## Data and documentation
 

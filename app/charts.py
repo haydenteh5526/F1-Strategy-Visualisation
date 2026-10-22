@@ -123,6 +123,73 @@ def pace_summary(pace: pd.DataFrame) -> pd.DataFrame:
         Label=lambda d: d.Typical.map('{:.2f} s'.format)+' · '+d.Laps.astype(str)+' laps')
 
 
+def matched_pace(laps: pd.DataFrame) -> pd.DataFrame:
+    """Same-lap, same-compound eligible teammate pairs in fixed Austria race windows."""
+    rows = []
+    eligible = laps.loc[laps.EligibleForPace]
+    for team, group in laps.groupby('Team'):
+        drivers = sorted(group.Driver.unique())
+        if len(drivers) != 2:
+            continue
+        a, b = drivers
+        pair = eligible.loc[eligible.Driver.eq(a)].merge(
+            eligible.loc[eligible.Driver.eq(b)], on=['LapNumber', 'Compound'],
+            suffixes=('A', 'B'), validate='one_to_one')
+        if pair.empty:
+            continue
+        pair = pair.assign(Window=pair.LapNumber.map(
+            lambda lap: f'{1+20*((int(lap)-1)//20)}–{min(71,20*(1+(int(lap)-1)//20))}'),
+            Difference=pair.LapTimeSecondsA-pair.LapTimeSecondsB,
+            AgeDifference=pair.TyreLifeA-pair.TyreLifeB)
+        for (window, compound), values in pair.groupby(['Window', 'Compound']):
+            rows.append({'Team': team, 'DriverA': a, 'DriverB': b, 'Pair': f'{a} − {b}',
+                         'Window': window, 'Compound': compound, 'MatchedLaps': len(values),
+                         'MedianDifferenceSecondsAminusB': values.Difference.median(),
+                         'MinimumTyreAgeDifference': values.AgeDifference.min(),
+                         'MaximumTyreAgeDifference': values.AgeDifference.max()})
+    return pd.DataFrame(rows, columns=[
+        'Team', 'DriverA', 'DriverB', 'Pair', 'Window', 'Compound', 'MatchedLaps',
+        'MedianDifferenceSecondsAminusB', 'MinimumTyreAgeDifference', 'MaximumTyreAgeDifference'])
+
+
+def matched_pace_chart(summary: pd.DataFrame, mode: str = 'light', legend: bool = True,
+                       pair_domain: list[str] | None = None) -> alt.LayerChart:
+    """One selected window and compound; a shared domain keeps comparisons honest across panels."""
+    data = summary.assign(Label=summary.MatchedLaps.map(lambda n: f'n={n}'),
+                          Sparse=summary.MatchedLaps.lt(5).map({True: 'Fewer than 5 pairs', False: '5 or more pairs'}))
+    x = alt.X('MedianDifferenceSecondsAminusB:Q', title='Median paired difference A − B (s)',
+              scale=alt.Scale(domain=[-1.1, 1.1], nice=False))
+    # Include every selected value if a future dataset exceeds the current symmetric range.
+    extent = max(1.1, float(data.MedianDifferenceSecondsAminusB.abs().max())+.25) if len(data) else 1.1
+    x.scale = alt.Scale(domain=[-extent, extent], nice=False)
+    order = pair_domain if pair_domain is not None else [
+        pair for pair in ['HAD − VER', 'ANT − RUS', 'HAM − LEC'] if pair in data.Pair.values]
+    y = alt.Y('Pair:N', scale=alt.Scale(domain=order), title='A − B',
+              axis=alt.Axis(labelFontWeight='bold'))
+    base = alt.Chart().encode(x=x, y=y, tooltip=[
+        'Pair:N', 'Team:N', 'Window:N', 'Compound:N', alt.Tooltip('MatchedLaps:Q', title='Matched pairs'),
+        alt.Tooltip('MedianDifferenceSecondsAminusB:Q', title='Median A − B (s)', format='.3f'),
+        alt.Tooltip('MinimumTyreAgeDifference:Q', title='Min tyre age A − B (laps)'),
+        alt.Tooltip('MaximumTyreAgeDifference:Q', title='Max tyre age A − B (laps)')])
+    points = base.mark_point(filled=True, size=130, opacity=1).encode(
+        color=team_color(list(data.Team.unique()), mode).legend(None),
+        shape=alt.Shape('Sparse:N', scale=alt.Scale(domain=['5 or more pairs', 'Fewer than 5 pairs'],
+                                                   range=['circle', 'diamond']),
+                        legend=alt.Legend(title='Sample size', symbolFillColor=INK[mode], symbolStrokeColor=INK[mode]) if legend else None))
+    counts = base.mark_text(dx=12, align='left', color=INK[mode]).encode(text='Label:N')
+    zero = alt.Chart().mark_rule(color=INK[mode], strokeDash=[4, 4]).encode(x=alt.datum(0))
+    return alt.layer(zero, points, counts, data=data).properties(height=150)
+
+
+def stint_context(laps: pd.DataFrame) -> pd.DataFrame:
+    """All recorded stints, including ones with zero eligible pace observations."""
+    return laps.sort_values('LapNumber').groupby(['Team', 'Driver', 'Stint', 'Compound'], sort=False).agg(
+        FirstLap=('LapNumber', 'min'), LastLap=('LapNumber', 'max'),
+        RecordedLaps=('LapNumber', 'size'), EligibleLaps=('EligibleForPace', 'sum'),
+        FreshTyreAtStart=('FreshTyre', 'first'), FirstRecordedTyreAge=('TyreLife', 'first'),
+        LastRecordedTyreAge=('TyreLife', 'last')).reset_index()
+
+
 def pace_chart(pace: pd.DataFrame, mode: str) -> alt.LayerChart:
     summary = pace_summary(pace)
     order = driver_order(summary)
@@ -144,7 +211,7 @@ def pace_chart(pace: pd.DataFrame, mode: str) -> alt.LayerChart:
     return alt.layer(spread, typical, labels).resolve_scale(color='independent', shape='independent').properties(height=52*len(order))
 
 
-def label_heights(pace: pd.DataFrame, clear: float = .45, reach: int = 9) -> pd.Series:
+def label_heights(pace: pd.DataFrame, clear: float = .6, reach: int = 18) -> pd.Series:
     """Height for each stint-end label, nudged up only where it would collide with another label in the same panel."""
     heights = pace.LapTimeSeconds.copy()
     for driver, rows in pace.groupby('Driver'):
@@ -165,7 +232,7 @@ def tyre_age_chart(pace: pd.DataFrame, mode: str = 'light') -> alt.FacetChart:
     totals = pace.groupby('Driver').size()
     stint_laps = pace.groupby(['Driver', 'Stint']).LapNumber.transform('size')
     data = pace.assign(Panel=pace.Driver+' · '+pace.Team+' · '+pace.Driver.map(totals).astype(str)+' laps',
-                       Letter=pace.Compound.str[0]+' · '+stint_laps.astype(str)+' laps',
+                       Letter='S'+pace.Stint.astype(int).astype(str)+' '+pace.Compound.str[0]+' · '+stint_laps.astype(str)+' laps',
                        LabelY=label_heights(pace))
     panels = sorted(data.Panel.unique(), key=lambda p: order.index(p.split(' · ')[0]))
     base = alt.Chart().encode(
@@ -173,7 +240,7 @@ def tyre_age_chart(pace: pd.DataFrame, mode: str = 'light') -> alt.FacetChart:
         y=alt.Y('LapTimeSeconds:Q', title='Lap time (s)', scale=alt.Scale(zero=False)),
         detail='Stint:N')
     points = base.mark_circle(size=38, opacity=.95).encode(color=compound_color(), tooltip=[
-        'Driver', alt.Tooltip('Compound', title='Tyre'), alt.Tooltip('TyreLife', title='Tyre age (laps)'),
+        'Driver', 'Stint', alt.Tooltip('Compound', title='Tyre'), alt.Tooltip('TyreLife', title='Tyre age (laps)'),
         alt.Tooltip('LapNumber', title='Lap'), alt.Tooltip('LapTimeSeconds', title='Lap time (s)', format='.3f')])
     ends = base.transform_window(Rank='rank()', sort=[alt.SortField('TyreLife', order='descending')],
                                  groupby=['Panel', 'Stint']).transform_filter('datum.Rank == 1')

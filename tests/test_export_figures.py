@@ -14,7 +14,7 @@ spec.loader.exec_module(module)
 class ExportFigureTests(unittest.TestCase):
     def test_every_figure_renders(self):
         figures = module.figures(module.charts.load_data(module.DATA))
-        self.assertEqual(len(figures), 5)
+        self.assertEqual(len(figures), 6)
         for name, chart in figures.items():
             with self.subTest(name):
                 self.assertIn('<svg', vlc.vegalite_to_svg(chart.to_dict()))
