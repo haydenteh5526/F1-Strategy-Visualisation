@@ -33,7 +33,7 @@ The five images in `figures/austria-2026/` provide the static companion sequence
 
 The merged presentation orders five primary views as stints, pace, tyre age, pit visits against the VSC clock, and event-context panels, then adds a sixth positions view. Each slide has a takeaway and reading guide. Pace uses teammate shapes and sample counts; tyre age uses individual lap points. Pit and event views are static, use recorded session timestamps, and stack at narrower widths. Position values hold the last completed lap rather than interpolating between recorded positions.
 
-Review corrected callout bounds, the normal-lap reference and interpretation of affected laps. The event reference is explicitly the median of eligible laps across the selected drivers' whole race, with its sample size; it is descriptive rather than a controlled local comparison. Amber rings distinguish VSC-affected laps from their completion timestamps, which may fall after the VSC window. Hayden approved head `1e5e03e`; CI and an independent local run passed all 64 tests with the retained snapshot. This verifies behaviour and recorded values, not audience comprehension.
+Review corrected callout bounds, the normal-lap reference and interpretation of affected laps. The event reference is explicitly the median of eligible laps across the selected drivers' whole race, with its sample size; it is descriptive rather than a controlled local comparison. Amber rings distinguish VSC-affected laps from their completion timestamps, which may fall after the VSC window. CI and a local run passed all 64 tests at head `1e5e03e` with the retained snapshot. This verifies behaviour and recorded values, not separate human verification or audience comprehension.
 
 ## Interpretation risks to evaluate
 

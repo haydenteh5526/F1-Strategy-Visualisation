@@ -38,7 +38,7 @@ On 21 October 2026, main was pulled through `ce8a0a1` and all pinned dependencie
 
 The original raw snapshot is installed locally from the supplied ZIP. Its lap-file SHA-256 matches the committed audit, and all six prepared files reproduced byte-for-byte again in an isolated temporary directory using the combined code. Timing validation passed 1,065 pairwise comparisons and six finish comparisons against the repository's saved official finish reference; that reference was not independently re-transcribed during this check. The committed prepared files and timing report were preserved. These checks establish reproduction from the retained source, not independent accuracy of the original timing source. The chart does not use field-reference gaps. The uploaded pack does not contain `session_status.csv`, so session-status offsets remain unverified locally.
 
-The standalone exports remain in `charts/austria-2026/`; the story prototype's chart exports remain separately in `figures/austria-2026/`. Neither implementation has replaced the other. Local integration checks pass. Hayden approved PR #16 at head `5e3997c`; later commits remain subject to the normal review requirements. Audience feedback remains pending.
+The standalone exports remain in `charts/austria-2026/`; the story prototype's chart exports remain separately in `figures/austria-2026/`. Neither implementation has replaced the other. Local integration checks pass. PR #16 requires approval of the latest changes before merging. Audience feedback remains pending.
 
 ## Design choices and limits
 
