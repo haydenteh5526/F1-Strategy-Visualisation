@@ -9,11 +9,11 @@ import pandas as pd
 
 TEAMS = ['Red Bull Racing', 'Mercedes', 'Ferrari']
 # Validated categorical slots (blue, aqua, orange) chosen to echo each team's livery.
-TEAM_COLORS = {'light': ['#2a78d6', '#1baf7a', '#eb6834'], 'dark': ['#3987e5', '#199e70', '#d95926']}
+TEAM_COLORS = {'light': ['#2a78d6', '#199e70', '#eb6834'], 'dark': ['#3987e5', '#199e70', '#d95926']}
 # F1 convention (red, yellow, white) stepped to stay readable; Hard is a neutral grey on purpose,
 # so every tyre mark also carries its S/M/H letter.
 COMPOUNDS = ['SOFT', 'MEDIUM', 'HARD']
-COMPOUND_COLORS = ['#e34948', '#eda100', '#898781']
+COMPOUND_COLORS = ['#e34948', '#cc8400', '#898781']
 VSC_FILL = '#898781'
 STATUS_COLUMNS = {'TrackStatus': str, 'EntryTrackStatus': str, 'ExitTrackStatus': str}
 SURFACE = {'light': '#ffffff', 'dark': '#15151e'}
@@ -202,7 +202,9 @@ def pace_chart(pace: pd.DataFrame, mode: str) -> alt.LayerChart:
                alt.Tooltip('Low', title='Middle half from (s)', format='.3f'),
                alt.Tooltip('High', title='Middle half to (s)', format='.3f'), alt.Tooltip('Laps', title='Laps')]
     base = alt.Chart(summary).encode(y=y, color=color, tooltip=tooltip)
-    spread = base.mark_bar(height=10, cornerRadius=5, opacity=.35).encode(x=x, x2='High:Q')
+    # A pale fill with a solid outline in the full colour, so the range edge keeps its contrast.
+    spread = base.mark_bar(height=10, cornerRadius=5, fillOpacity=.35, strokeWidth=1.5, strokeOpacity=1).encode(
+        x=x, x2='High:Q', stroke=color)
     typical = alt.Chart(summary).mark_point(filled=True, size=190, opacity=1, stroke=SURFACE[mode], strokeWidth=2).encode(
         x=alt.X('Typical:Q', title='Lap time (s)'), y=y, tooltip=tooltip, **driver_marks(summary, mode))
     labels = alt.Chart(summary).mark_text(align='left', dx=8, fontSize=12, color=INK[mode]).encode(
@@ -239,7 +241,7 @@ def tyre_age_chart(pace: pd.DataFrame, mode: str = 'light') -> alt.FacetChart:
         x=alt.X('TyreLife:Q', title='Tyre age (laps)'),
         y=alt.Y('LapTimeSeconds:Q', title='Lap time (s)', scale=alt.Scale(zero=False)),
         detail='Stint:N')
-    points = base.mark_circle(size=38, opacity=.95).encode(color=compound_color(), tooltip=[
+    points = base.mark_circle(size=38, opacity=1).encode(color=compound_color(), tooltip=[
         'Driver', 'Stint', alt.Tooltip('Compound', title='Tyre'), alt.Tooltip('TyreLife', title='Tyre age (laps)'),
         alt.Tooltip('LapNumber', title='Lap'), alt.Tooltip('LapTimeSeconds', title='Lap time (s)', format='.3f')])
     ends = base.transform_window(Rank='rank()', sort=[alt.SortField('TyreLife', order='descending')],
@@ -277,7 +279,7 @@ def vsc_chart(laps: pd.DataFrame, mode: str) -> alt.LayerChart:
     # Lap 1 and pit laps are left out so the VSC effect is not mixed with standing starts or stops.
     data = laps.loc[~(laps.IsFirstLap | laps.IsPitInLap | laps.IsPitOutLap)].assign(
         Phase=lambda d: d.HasVSC.map({True: 'VSC lap', False: 'Other lap'}))
-    dots = alt.Chart(data).mark_point(filled=True, size=70, opacity=.9, stroke=SURFACE[mode], strokeWidth=1).encode(
+    dots = alt.Chart(data).mark_point(filled=True, size=70, opacity=1, stroke=SURFACE[mode], strokeWidth=1).encode(
         x=alt.X('LapNumber:Q', title='Lap', scale=alt.Scale(domain=[1, int(laps.LapNumber.max())], nice=False)),
         y=alt.Y('LapTimeSeconds:Q', title='Lap time (s)', scale=alt.Scale(zero=False)),
         **driver_marks(data, mode),
