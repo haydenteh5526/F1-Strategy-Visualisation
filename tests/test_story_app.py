@@ -151,6 +151,32 @@ class StoryAppTests(unittest.TestCase):
         self.assertEqual(len(self.app.get('vega_lite_chart')), 0)
         self.assertTrue(any('Missing pairs are not zero differences' in box.value for box in self.app.info))
 
+    def test_plan_examples_are_stated_from_the_data(self):
+        def notes():
+            return next(h.proto.body for h in self.app.get('html') if 'f1-takeaway' in h.proto.body)
+        self.assertIn('ANT fitted Hard twice', notes())
+        self.go_to(1)
+        self.app.radio[0].set_value('Matched race windows').run()
+        self.assertIn("ANT's typical lap was 0.018 s faster than RUS's", notes())
+        self.assertIn('0.155 s slower on Medium in laps 1–20 (16 pairs)', notes())
+        self.assertIn('0.883 s faster on Hard in laps 61–71 (11 pairs, on tyres 8 laps younger)', notes())
+        self.go_to(2)
+        self.assertIn("HAM's Soft set was already 3 laps old when fitted and gives 15 normal laps from a 17-lap stint", notes())
+        slopes = self.app.dataframe[0].value.set_index(['Driver', 'Stint number'])['Change per tyre lap (s)']
+        self.assertAlmostEqual(slopes[('HAM', 1)], .205855, places=6)
+        self.assertAlmostEqual(slopes[('LEC', 2)], -.012999, places=6)
+        self.go_to(3)
+        table = self.app.dataframe[0].value.set_index(['Driver', 'Entry lap'])['Seconds from the nearest VSC']
+        self.assertAlmostEqual(table[('ANT', 24)], .132)
+        self.assertAlmostEqual(table[('ANT', 51)], 48.957)
+        self.assertTrue(pd.isna(table[('HAM', 25)]))   # The overlapping visit has no gap to report.
+
+    def test_every_view_names_its_teams_and_source(self):
+        self.app.multiselect[0].set_value(['Ferrari']).run()
+        for slide in range(6):
+            self.go_to(slide)
+            self.assertTrue(any(c.value.startswith('Showing Ferrari. Source: FastF1') for c in self.app.caption), slide)
+
     def test_tyre_table_retains_used_set_and_all_stint_laps(self):
         self.app.multiselect[0].set_value(['Ferrari']).run()
         self.go_to(2)

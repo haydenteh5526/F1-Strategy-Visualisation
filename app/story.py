@@ -68,6 +68,7 @@ def pit_clock_table(visits: list[dict], teams: pd.Series) -> pd.DataFrame:
         'VSC flag on a pit lap': table.whole.map({True: 'Yes', False: 'No'}),
         'Overlaps VSC (s)': table.overlap.round(1),
         'Within 1 s of a VSC boundary': table.near.map({True: 'Yes', False: 'No'}),
+        'Seconds from the nearest VSC': table.nearest.where(table.overlap.eq(0)).round(3),
     }).sort_values(['Entry lap', 'Driver'])
 
 
@@ -85,10 +86,15 @@ def overview_slide() -> None:
             else f'Drivers made {stops.min()} to {stops.max()} pit stops, and {who} stopped the most ({stops.max()}). ')
     text = ('Everyone started on Medium tyres. ' if firsts.eq('MEDIUM').all() else '')+text
     text += f"Only {', '.join(soft)} used the Soft tyre." if soft else ''
+    ordered = stints.sort_values(['Driver', 'FirstLap'])
+    repeat = ordered.loc[ordered.Compound.eq(ordered.groupby('Driver').Compound.shift())]
+    again = (f'Two bars of the same colour in a row are two different sets: {repeat.iloc[0].Driver} fitted '
+             f'{repeat.iloc[0].Compound.title()} twice. Every pit stop starts a new stint, even on the same tyre.') if len(repeat) else None
     explain(text, ['Each row is one driver, and each coloured bar is one set of tyres: <b>S</b> = Soft, <b>M</b> = Medium, <b>H</b> = Hard.',
                    'A gap between two bars is a <b>pit stop</b>: the car drives into the pit lane to change tyres.',
                    'A grey strip is a <b>Virtual Safety Car (VSC)</b>: after an incident, every car must slow down for a short time.'],
             [f'<b>{who}</b> stopped the most ({stops.max()} times).' if stops.min() != stops.max() else 'Every driver stopped the same number of times.',
+             *([again] if again else []),
              'This only shows who used which tyre and when. It does not say who was faster.'])
     # Our own HTML built from the prepared data, so it is safe to run as an iframe.
     st.iframe(replay.html(laps, 'timeline', mode, 52*laps.Driver.nunique()+80), height=52*laps.Driver.nunique()+90, alt=replay.ARIA['timeline'])
@@ -122,14 +128,37 @@ def pace_slide() -> None:
                'not a better strategy. Fuel load, traffic and conditions are not controlled.')
 
 
+def matched_contrast(summary: pd.DataFrame) -> str:
+    """The team-mate pair whose matched windows differ most (5+ pairs each), set against their whole-race medians."""
+    solid = summary.loc[summary.MatchedLaps.ge(5)]
+    spread = solid.groupby('Pair').MedianDifferenceSecondsAminusB.agg(lambda d: d.max()-d.min())
+    if solid.empty or spread.max() <= 0:
+        return 'Matching race lap and compound can reveal patterns hidden by whole-race summaries.'
+    groups = solid.loc[solid.Pair.eq(spread.idxmax())]
+    a, b = groups.iloc[0].DriverA, groups.iloc[0].DriverB
+    typical = pace.groupby('Driver').LapTimeSeconds.median()
+
+    def phrase(row) -> str:
+        same_age = row.MinimumTyreAgeDifference == row.MaximumTyreAgeDifference and row.MinimumTyreAgeDifference
+        age = (f", on tyres {abs(row.MinimumTyreAgeDifference):.0f} laps "
+               f"{'younger' if row.MinimumTyreAgeDifference < 0 else 'older'}") if same_age else ''
+        return (f"{abs(row.MedianDifferenceSecondsAminusB):.3f} s {'slower' if row.MedianDifferenceSecondsAminusB > 0 else 'faster'} "
+                f'on {row.Compound.title()} in laps {row.Window} ({row.MatchedLaps} pairs{age})')
+    high = groups.loc[groups.MedianDifferenceSecondsAminusB.idxmax()]
+    low = groups.loc[groups.MedianDifferenceSecondsAminusB.idxmin()]
+    whole = typical[a]-typical[b]
+    return (f"Over the whole race {a}'s typical lap was {abs(whole):.3f} s {'faster' if whole < 0 else 'slower'} than {b}'s, "
+            f'but on matched laps {a} was {phrase(high)} and {phrase(low)}.')
+
+
 def matched_pace_slide() -> None:
-    explain('Matching race lap and compound can reveal patterns hidden by whole-race summaries.',
+    summary = charts.matched_pace(laps)
+    explain(matched_contrast(summary),
             ['Each point compares two team-mates on the <b>same race laps and compound</b>, with both laps eligible.',
              '<b>A − B</b>: a negative value means A was faster; a positive value means B was faster. The dashed line is zero.',
              'The point is the median of the paired differences, not a difference between whole-race medians.'],
             ['The count is the number of matched lap pairs. A diamond warns that there are fewer than five.',
              'Tyre ages can still differ. Fuel, traffic and car differences remain uncontrolled.'])
-    summary = charts.matched_pace(laps)
     window = st.selectbox('Race window (laps)', ['1–20', '21–40', '41–60', '61–71'])
     compound = st.selectbox('Matched compound', charts.COMPOUNDS, index=1)
     selected = summary.loc[summary.Window.eq(window) & summary.Compound.eq(compound)]
@@ -153,12 +182,18 @@ def matched_pace_slide() -> None:
 
 
 def tyre_slide() -> None:
+    context = charts.stint_context(laps)
+    used = context.loc[~context.FreshTyreAtStart.astype(bool)].sort_values('RecordedLaps', ascending=False)
+    example = (f"{used.iloc[0].Driver}'s {used.iloc[0].Compound.title()} set was already {used.iloc[0].FirstRecordedTyreAge:.0f} laps old "
+               f'when fitted and gives {used.iloc[0].EligibleLaps} normal laps from a {used.iloc[0].RecordedLaps}-lap stint: stint length, '
+               'tyre age and laps compared are different numbers.') if len(used) else None
     explain('Lap times and tyre age move together in a messy way, so we describe the pattern without claiming the tyres caused it.',
             ['Each <b>dot</b> is one normal lap. Further right means older tyres (more laps on that set), and higher up means a slower lap.',
              'Colour shows the tyre: red is Soft, yellow is Medium and grey is Hard.',
              'Each panel is one driver, with the number of laps behind it.'],
             ['Cars get lighter as fuel burns, which makes laps faster and can hide tyre wear.',
-             'Tyre age counts laps on a set. It is not a measure of how worn the tyre is.'])
+             'Tyre age counts laps on a set. It is not a measure of how worn the tyre is.',
+             *([example] if example else [])])
     st.write('Tyre age counts laps on a set, not wear. Cars also get lighter as fuel burns, '
              'so slower or faster laps are not caused by tyres alone.')
     panel_rows = -(-laps.Driver.nunique()//2)
@@ -166,14 +201,17 @@ def tyre_slide() -> None:
     st.caption('Each dot is one normal racing lap, coloured by tyre and labelled with its stint and lap count. '
                'Lines are not drawn across the laps that are left out. Sparse stints may not support a trend.')
     st.markdown('#### Recorded stints and eligible observations')
-    context = charts.stint_context(laps).rename(columns={
+    context = context.rename(columns={
         'Stint': 'Stint number', 'FirstLap': 'First race lap', 'LastLap': 'Last race lap',
         'RecordedLaps': 'Recorded laps', 'EligibleLaps': 'Eligible laps',
         'FreshTyreAtStart': 'Fresh set at start', 'FirstRecordedTyreAge': 'Starting tyre age (laps)',
-        'LastRecordedTyreAge': 'Ending tyre age (laps)'})
-    st.dataframe(context, hide_index=True, width='stretch')
+        'LastRecordedTyreAge': 'Ending tyre age (laps)', 'DescriptiveSecondsPerTyreLap': 'Change per tyre lap (s)'})
+    st.dataframe(context, hide_index=True, width='stretch',
+                 column_config={'Change per tyre lap (s)': st.column_config.NumberColumn(format='%.3f')})
     st.caption('Recorded laps count every lap in the stint; eligible laps count only the dots used for pace analysis. '
-               'Used sets can start above age one. Stint number distinguishes consecutive sets of the same compound.')
+               'Used sets can start above age one. Stint number distinguishes consecutive sets of the same compound. '
+               'Change per tyre lap is a straight-line fit, shown only for stints with at least five normal laps and two tyre ages. '
+               'It describes the dots, not tyre wear: fuel burn and track changes happen at the same time.')
 
 
 def pit_slide() -> None:
@@ -205,7 +243,11 @@ def pit_slide() -> None:
                'accuracy. The bar is the whole trip through the pit lane, not the time the car stood still or the time lost.')
     st.markdown('#### Pit visits and the VSC clock')
     st.dataframe(pit_clock_table(visits_clock, laps.drop_duplicates('Driver').set_index('Driver').Team),
-                 hide_index=True, width='stretch')
+                 hide_index=True, width='stretch', column_config={
+                     'Pit-lane time (s)': st.column_config.NumberColumn(format='%.1f'),
+                     'Overlaps VSC (s)': st.column_config.NumberColumn(format='%.1f'),
+                     'Seconds from the nearest VSC': st.column_config.NumberColumn(format='%.3f')})
+    st.caption('Seconds from the nearest VSC is left blank for the visit that overlaps one.')
 
 
 def event_slide() -> None:
@@ -232,8 +274,9 @@ def event_slide() -> None:
              'explanation, so every non-pit affected lap is kept here.' if len(vsc) else 'No VSC laps for the selected teams.')
     st.iframe(replay.html(laps, 'event', mode, 800), height=810, alt=replay.ARIA['event'])
     st.caption('Each dot sits at the moment a car finished a lap, with nothing drawn between laps. The bottom row compares cars on the '
-               'same lap: seconds behind the first car of the whole field to finish it, which is not a live gap. Changes across these '
-               'windows include pit activity and other racing, so they do not isolate the effect of the VSC.')
+               'same lap: seconds behind the first car of the whole field to finish it, which is not a live gap, and that first car can '
+               'differ from lap to lap. Changes across these windows include pit activity and other racing, so they do not isolate '
+               'the effect of the VSC.')
 
 
 def positions_slide() -> None:
@@ -307,6 +350,8 @@ with st.container(border=True, key='chart-frame'):
     # A new key per slide and direction remounts the content, which replays the slide-in animation.
     with st.container(key=f'slide-{st.session_state.slide}-{st.session_state.direction}'):
         SLIDES[title]()
+        st.caption(f"Showing {', '.join(teams)}. Source: FastF1 {provenance['fastf1_version']} race timing, "
+                   '2026 Austrian Grand Prix; see Sources below.')
 
 st.subheader('Key terms')
 for term, meaning in GLOSSARY.items():

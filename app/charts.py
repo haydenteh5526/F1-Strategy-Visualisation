@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import altair as alt
+import numpy as np
 import pandas as pd
 
 TEAMS = ['Red Bull Racing', 'Mercedes', 'Ferrari']
@@ -181,13 +182,25 @@ def matched_pace_chart(summary: pd.DataFrame, mode: str = 'light', legend: bool 
     return alt.layer(zero, points, counts, data=data).properties(height=150)
 
 
+def descriptive_slope(rows: pd.DataFrame) -> float:
+    """Straight-line change in lap time per tyre lap over a stint's eligible laps; at least five laps and two ages, else blank."""
+    eligible = rows.loc[rows.EligibleForPace]
+    if len(eligible) < 5 or eligible.TyreLife.nunique() < 2:
+        return np.nan
+    return float(np.polyfit(eligible.TyreLife, eligible.LapTimeSeconds, 1)[0])
+
+
 def stint_context(laps: pd.DataFrame) -> pd.DataFrame:
     """All recorded stints, including ones with zero eligible pace observations."""
-    return laps.sort_values('LapNumber').groupby(['Team', 'Driver', 'Stint', 'Compound'], sort=False).agg(
+    ordered = laps.sort_values('LapNumber')
+    keys = ['Team', 'Driver', 'Stint', 'Compound']
+    table = ordered.groupby(keys, sort=False).agg(
         FirstLap=('LapNumber', 'min'), LastLap=('LapNumber', 'max'),
         RecordedLaps=('LapNumber', 'size'), EligibleLaps=('EligibleForPace', 'sum'),
         FreshTyreAtStart=('FreshTyre', 'first'), FirstRecordedTyreAge=('TyreLife', 'first'),
         LastRecordedTyreAge=('TyreLife', 'last')).reset_index()
+    slopes = ordered.groupby(keys, sort=False)[['EligibleForPace', 'TyreLife', 'LapTimeSeconds']].apply(descriptive_slope)
+    return table.assign(DescriptiveSecondsPerTyreLap=slopes.values)
 
 
 def pace_chart(pace: pd.DataFrame, mode: str) -> alt.LayerChart:

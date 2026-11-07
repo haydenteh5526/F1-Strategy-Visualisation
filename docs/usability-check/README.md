@@ -15,7 +15,8 @@ Technical checks only. They do not replace the audience sessions in #8.
 
 | Check | Result |
 | --- | --- |
-| Layout at 420, 700, 1000 and 1500 px wide, all six views | 24 of 24 clean: no clipped chart text, no sideways page scroll |
+| Layout at 420, 700, 1000 and 1500 px wide, all six views | 24 of 24 clean: no clipped chart text, no sideways page scroll. Rechecked 7 November 2026, adding a check that every badge's text stays inside its pill |
+| Pit-clock badge (fixed 7 November 2026) | The Antonelli badge text ran past its pill ("TOO CLOSE TO CAL") because the pill was sized for 11 px text while the label style draws 12 px. Pills are now measured at 12 px, and the static views re-measure once the web font has loaded |
 | Narrow screens | Tyre panels switch to one column; pit-clock, event and tyre labels wrap or flip instead of running off the edge |
 | Keyboard | Arrow buttons are reachable with Tab and work with Enter; named "Previous chart" and "Next chart" |
 | Visible focus | 3 px white outline on buttons and controls |
