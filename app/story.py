@@ -184,8 +184,10 @@ def matched_pace_slide() -> None:
 def tyre_slide() -> None:
     context = charts.stint_context(laps)
     used = context.loc[~context.FreshTyreAtStart.astype(bool)].sort_values('RecordedLaps', ascending=False)
-    example = (f"{used.iloc[0].Driver}'s {used.iloc[0].Compound.title()} set was already {used.iloc[0].FirstRecordedTyreAge:.0f} laps old "
-               f'when fitted and gives {used.iloc[0].EligibleLaps} normal laps from a {used.iloc[0].RecordedLaps}-lap stint: stint length, '
+    # FastF1 counts the current lap in TyreLife, so this is the age on the stint's first lap, not the age when fitted.
+    example = (f"{used.iloc[0].Driver}'s used {used.iloc[0].Compound.title()} set had a recorded tyre age of "
+               f'{used.iloc[0].FirstRecordedTyreAge:.0f} laps on the first lap of the stint, and gives {used.iloc[0].EligibleLaps} '
+               f'normal laps from a {used.iloc[0].RecordedLaps}-lap stint: stint length, '
                'tyre age and laps compared are different numbers.') if len(used) else None
     explain('Lap times and tyre age move together in a messy way, so we describe the pattern without claiming the tyres caused it.',
             ['Each <b>dot</b> is one normal lap. Further right means older tyres (more laps on that set), and higher up means a slower lap.',

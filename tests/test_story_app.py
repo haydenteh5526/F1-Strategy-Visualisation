@@ -161,7 +161,9 @@ class StoryAppTests(unittest.TestCase):
         self.assertIn('0.155 s slower on Medium in laps 1–20 (16 pairs)', notes())
         self.assertIn('0.883 s faster on Hard in laps 61–71 (11 pairs, on tyres 8 laps younger)', notes())
         self.go_to(2)
-        self.assertIn("HAM's Soft set was already 3 laps old when fitted and gives 15 normal laps from a 17-lap stint", notes())
+        self.assertIn("HAM's used Soft set had a recorded tyre age of 3 laps on the first lap of the stint, "
+                      'and gives 15 normal laps from a 17-lap stint', notes())
+        self.assertNotIn('when fitted', notes())   # FastF1's TyreLife includes the current lap.
         slopes = self.app.dataframe[0].value.set_index(['Driver', 'Stint number'])['Change per tyre lap (s)']
         self.assertAlmostEqual(slopes[('HAM', 1)], .205855, places=6)
         self.assertAlmostEqual(slopes[('LEC', 2)], -.012999, places=6)

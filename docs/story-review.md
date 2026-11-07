@@ -19,7 +19,7 @@ Each design card's intended message was compared with the live page on main `c88
 | --- | --- |
 | 1 Tyre stints | "Two bars of the same colour in a row are two different sets": a pit stop starts a new stint even on the same tyre (ANT, Hard twice) |
 | 2 Matched pace | The Mercedes contrast as the takeaway: whole race ANT 0.018 s faster than RUS; matched laps ANT 0.155 s slower on Medium in laps 1–20 (16 pairs) and 0.883 s faster on Hard in laps 61–71 (11 pairs, tyres 8 laps younger) |
-| 3 Tyre age | HAM's used Soft set: 3 laps old when fitted, 15 normal laps from a 17-lap stint. The stint table now shows the descriptive change per tyre lap (stints with at least five normal laps and two tyre ages), with a caption that it is not a wear rate |
+| 3 Tyre age | HAM's used Soft set: recorded tyre age 3 laps on the first lap of the stint (FastF1 counts that lap, so this is not the age when fitted), 15 normal laps from a 17-lap stint. The stint table now shows the descriptive change per tyre lap (stints with at least five normal laps and two tyre ages), with a caption that it is not a wear rate |
 | 4 Pit/VSC clock | Seconds from the nearest VSC for every non-overlapping visit (ANT lap 24: 0.132 s; ANT lap 51: 48.957 s) |
 | 5 Event context | The first car to finish a lap can differ from lap to lap |
 | All views | A line under each view naming the teams shown and the source |
