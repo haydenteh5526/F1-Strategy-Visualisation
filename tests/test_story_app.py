@@ -187,7 +187,7 @@ class StoryAppTests(unittest.TestCase):
         used = table.loc[table.Driver.eq('HAM') & table['Stint number'].eq(3)].iloc[0]
         self.assertEqual(used['Recorded laps'], 17)
         self.assertEqual(used['Eligible laps'], 15)
-        self.assertEqual(used['Starting tyre age (laps)'], 3)
+        self.assertEqual(used['Tyre age on first lap (laps)'], 3)
         self.assertFalse(used['Fresh set at start'])
 
 
