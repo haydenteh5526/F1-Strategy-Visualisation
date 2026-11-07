@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 import altair as alt
@@ -156,7 +157,9 @@ def matched_pace_chart(summary: pd.DataFrame, mode: str = 'light', legend: bool 
                        pair_domain: list[str] | None = None) -> alt.LayerChart:
     """One selected window and compound; a shared domain keeps comparisons honest across panels."""
     data = summary.assign(Label=summary.MatchedLaps.map(lambda n: f'n={n}'),
-                          Sparse=summary.MatchedLaps.lt(5).map({True: 'Fewer than 5 pairs', False: '5 or more pairs'}))
+                          Sparse=summary.MatchedLaps.lt(5).map({True: 'Fewer than 5 pairs', False: '5 or more pairs'}),
+                          Side=summary.MedianDifferenceSecondsAminusB.between(-.3, 0, inclusive='left').map(
+                              {True: 'left', False: 'right'}))
     x = alt.X('MedianDifferenceSecondsAminusB:Q', title='Median paired difference A − B (s)',
               scale=alt.Scale(domain=[-1.1, 1.1], nice=False))
     # Include every selected value if a future dataset exceeds the current symmetric range.
@@ -176,7 +179,8 @@ def matched_pace_chart(summary: pd.DataFrame, mode: str = 'light', legend: bool 
         shape=alt.Shape('Sparse:N', scale=alt.Scale(domain=['5 or more pairs', 'Fewer than 5 pairs'],
                                                    range=['circle', 'diamond']),
                         legend=alt.Legend(title='Sample size', symbolFillColor=INK[mode], symbolStrokeColor=INK[mode]) if legend else None))
-    counts = base.mark_text(dx=12, align='left', color=INK[mode]).encode(text='Label:N')
+    counts = (base.mark_text(dx=12, align='left', color=INK[mode]).encode(text='Label:N').transform_filter("datum.Side == 'right'")
+              + base.mark_text(dx=-12, align='right', color=INK[mode]).encode(text='Label:N').transform_filter("datum.Side == 'left'"))
     zero = alt.Chart().mark_rule(color=INK[mode], strokeDash=[4, 4]).encode(x=alt.datum(0))
     return alt.layer(zero, points, counts, data=data).properties(height=150)
 
@@ -213,19 +217,49 @@ def pace_chart(pace: pd.DataFrame, mode: str) -> alt.LayerChart:
     return alt.layer(spread, typical, labels).resolve_scale(color='independent', shape='independent').properties(height=52*len(order))
 
 
-def label_heights(pace: pd.DataFrame, clear: float = .6, reach: int = 18) -> pd.Series:
-    """Height for each stint-end label, nudged up only where it would collide with another label in the same panel."""
-    heights = pace.LapTimeSeconds.copy()
-    for driver, rows in pace.groupby('Driver'):
+TYRE_PANEL = {'width': 250, 'height': 150}
+CHAR_PX, LABEL_PX, DOT_PX, OFFSET_PX = 5.4, 13, 4, 7   # Bold 11 px Arial: about 5.1 px a character, plus margin.
+
+
+def tyre_domains(pace: pd.DataFrame) -> tuple[list[float], list[float]]:
+    """Fixed axes for the tyre-age panels, so label placement and drawing use the same scale."""
+    return [0, 5*math.ceil((pace.TyreLife.max()+1)/5)], [math.floor(pace.LapTimeSeconds.min()), math.ceil(pace.LapTimeSeconds.max())]
+
+
+def label_boxes(pace: pd.DataFrame, labels: pd.Series) -> pd.DataFrame:
+    """Place each stint-end label beside its last dot, clear of every dot and label in the panel and inside it.
+
+    Works in pixels: tries the right side first, then the left, moving up or down a few pixels at a time."""
+    (x0, x1), (y0, y1) = tyre_domains(pace)
+    w, h = TYRE_PANEL['width'], TYRE_PANEL['height']
+    px = lambda age: (age-x0)/(x1-x0)*w
+    py = lambda time: (y1-time)/(y1-y0)*h
+    rows = []
+    for driver, group in pace.groupby('Driver'):
+        dots = [(px(a), py(t)) for a, t in zip(group.TyreLife, group.LapTimeSeconds)]
         placed = []
-        ends = rows.sort_values('TyreLife').groupby('Stint').tail(1).sort_values('LapTimeSeconds')
-        for index, end in ends.iterrows():
-            height = end.LapTimeSeconds
-            while any(abs(height-h) < clear and abs(end.TyreLife-age) < reach for age, h in placed):
-                height += .3
-            placed.append((end.TyreLife, height))
-            heights[index] = height
-    return heights
+        ends = group.sort_values('TyreLife').groupby('Stint').tail(1)
+        for index, end in ends.sort_values('LapTimeSeconds', ascending=False).iterrows():
+            width, x, y = len(labels[index])*CHAR_PX, px(end.TyreLife), py(end.LapTimeSeconds)
+            chosen = None
+            for side in ('right', 'left'):
+                left = x+OFFSET_PX if side == 'right' else x-OFFSET_PX-width
+                for step in [0]+[s*k for k in range(1, 17) for s in (-1, 1)]:
+                    top = y+step*5-LABEL_PX/2
+                    box = (left, top, left+width, top+LABEL_PX)
+                    inside = box[0] >= 0 and box[2] <= w and box[1] >= 0 and box[3] <= h
+                    hits_dot = any(box[0]-DOT_PX < dx < box[2]+DOT_PX and box[1]-DOT_PX < dy < box[3]+DOT_PX for dx, dy in dots)
+                    hits_label = any(box[0] < b[2] and b[0] < box[2] and box[1] < b[3] and b[1] < box[3] for b in placed)
+                    if inside and not hits_dot and not hits_label:
+                        chosen = (side, box)
+                        break
+                if chosen:
+                    break
+            side, box = chosen or ('right', (x+OFFSET_PX, y-LABEL_PX/2, x+OFFSET_PX+width, y+LABEL_PX/2))
+            placed.append(box)
+            rows.append({'index': index, 'Side': side, 'LabelY': y1-(box[1]+LABEL_PX/2)/h*(y1-y0), 'Box': box,
+                         'Clear': chosen is not None})
+    return pd.DataFrame(rows).set_index('index')
 
 
 def tyre_age_chart(pace: pd.DataFrame, mode: str = 'light') -> alt.FacetChart:
@@ -234,21 +268,28 @@ def tyre_age_chart(pace: pd.DataFrame, mode: str = 'light') -> alt.FacetChart:
     totals = pace.groupby('Driver').size()
     stint_laps = pace.groupby(['Driver', 'Stint']).LapNumber.transform('size')
     data = pace.assign(Panel=pace.Driver+' · '+pace.Team+' · '+pace.Driver.map(totals).astype(str)+' laps',
-                       Letter='S'+pace.Stint.astype(int).astype(str)+' '+pace.Compound.str[0]+' · '+stint_laps.astype(str)+' laps',
-                       LabelY=label_heights(pace))
+                       Letter='S'+pace.Stint.astype(int).astype(str)+' '+pace.Compound.str[0]+' · '+stint_laps.astype(str)+' laps')
+    placed = label_boxes(pace, data.Letter)
+    data = data.assign(LabelY=placed.LabelY, Side=placed.Side)
     panels = sorted(data.Panel.unique(), key=lambda p: order.index(p.split(' · ')[0]))
+    x_domain, y_domain = tyre_domains(pace)
     base = alt.Chart().encode(
-        x=alt.X('TyreLife:Q', title='Tyre age (laps)'),
-        y=alt.Y('LapTimeSeconds:Q', title='Lap time (s)', scale=alt.Scale(zero=False)),
+        x=alt.X('TyreLife:Q', title='Tyre age (laps)', scale=alt.Scale(domain=x_domain, nice=False)),
+        y=alt.Y('LapTimeSeconds:Q', title='Lap time (s)', scale=alt.Scale(domain=y_domain, nice=False, zero=False)),
         detail='Stint:N')
     points = base.mark_circle(size=38, opacity=1).encode(color=compound_color(), tooltip=[
         'Driver', 'Stint', alt.Tooltip('Compound', title='Tyre'), alt.Tooltip('TyreLife', title='Tyre age (laps)'),
         alt.Tooltip('LapNumber', title='Lap'), alt.Tooltip('LapTimeSeconds', title='Lap time (s)', format='.3f')])
-    ends = base.transform_window(Rank='rank()', sort=[alt.SortField('TyreLife', order='descending')],
-                                 groupby=['Panel', 'Stint']).transform_filter('datum.Rank == 1')
-    labels = ends.mark_text(align='left', dx=7, fontSize=11, fontWeight='bold', color=INK[mode]).encode(
-        y=alt.Y('LabelY:Q', scale=alt.Scale(zero=False)), text='Letter:N')
-    return alt.layer(points, labels, data=data).properties(width=250, height=150).facet(
+    ends = base.transform_filter('isValid(datum.Side)')
+    label_y = alt.Y('LabelY:Q', scale=alt.Scale(domain=y_domain, nice=False, zero=False))
+    # A thin leader joins a label that had to move away from its stint's last dot.
+    leaders = ends.transform_filter('abs(datum.LabelY - datum.LapTimeSeconds) > .15').mark_rule(
+        color=INK[mode], strokeWidth=.8, opacity=.6).encode(y2='LabelY:Q')
+    labels = alt.layer(*[ends.mark_text(align=side, dx=OFFSET_PX if side == 'left' else -OFFSET_PX, fontSize=11, fontWeight='bold',
+                                        color=INK[mode]).encode(y=label_y, text='Letter:N').transform_filter(
+                                            f"datum.Side == '{'right' if side == 'left' else 'left'}'")
+                         for side in ('left', 'right')])
+    return alt.layer(leaders, points, labels, data=data).properties(**TYRE_PANEL).facet(
         facet=alt.Facet('Panel:N', sort=panels, title=None, header=alt.Header(labelFontWeight='bold', labelFontSize=12)),
         columns=2).resolve_scale(x='shared', y='shared')
 
@@ -279,7 +320,9 @@ def vsc_chart(laps: pd.DataFrame, mode: str) -> alt.LayerChart:
     # Lap 1 and pit laps are left out so the VSC effect is not mixed with standing starts or stops.
     data = laps.loc[~(laps.IsFirstLap | laps.IsPitInLap | laps.IsPitOutLap)].assign(
         Phase=lambda d: d.HasVSC.map({True: 'VSC lap', False: 'Other lap'}))
-    dots = alt.Chart(data).mark_point(filled=True, size=70, opacity=1, stroke=SURFACE[mode], strokeWidth=1).encode(
+    dots = alt.Chart(data).mark_point(filled=True, opacity=1, stroke=SURFACE[mode], strokeWidth=1).encode(
+        size=alt.Size('Phase:N', scale=alt.Scale(domain=['VSC lap', 'Other lap'], range=[110, 28]),
+                      legend=alt.Legend(title='Lap type', orient='top')),
         x=alt.X('LapNumber:Q', title='Lap', scale=alt.Scale(domain=[1, int(laps.LapNumber.max())], nice=False)),
         y=alt.Y('LapTimeSeconds:Q', title='Lap time (s)', scale=alt.Scale(zero=False)),
         **driver_marks(data, mode),
