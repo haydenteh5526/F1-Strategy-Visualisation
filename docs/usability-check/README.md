@@ -31,8 +31,7 @@ Automated checks live in `tests/test_accessibility.py` and `tests/test_replay.py
 
 ## Remaining limitations
 
-- Tyre-age export: a few end-of-stint labels sit on top of dots (e.g. LEC "S1 M", HAM "S3 S") and the HAD/VER labels reach the panel edge. They stay readable.
-- Matched-pace export: "n" labels next to a point close to zero touch the zero line.
-- VSC export: the dots crowd together at normal pace; only the VSC laps stand out. The dashboard view is the clearer one.
+- Fixed 7 November 2026: tyre-age export labels now sit clear of every dot and label inside their panel, with a thin leader line where a label moved; matched-pace "n" labels just left of zero move to the far side so they no longer cross the zero line; the VSC export draws normal laps smaller so the VSC laps stand out. Tests check all three.
+- VSC export: normal-pace dots still overlap each other; read exact values from the dashboard view.
 - Contrast was computed from the colours used, not measured from screenshots.
 - Not tested: real screen readers, Safari/Firefox, touch devices, printed output.
