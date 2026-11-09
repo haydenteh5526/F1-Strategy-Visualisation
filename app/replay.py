@@ -303,7 +303,7 @@ const BOXES = [], POINTS = [];   // Recorded so tests can check bounds and colli
 const hit = (a, b, pad) => a.x < b.x + b.w + pad && b.x < a.x + a.w + pad && a.y < b.y + b.h + pad && b.y < a.y + a.h + pad;
 const within = (b, r) => b.x >= r.x0 && b.x + b.w <= r.x1 && b.y >= r.y0 && b.y + b.h <= r.y1;
 function measure(text) {   // Real text width in the browser; a cautious estimate where there is no canvas.
-  try { const c = measure.ctx || (measure.ctx = document.createElement('canvas').getContext('2d')); c.font = "700 11px 'Titillium Web', system-ui, sans-serif"; return c.measureText(text).width; }
+  try { const c = measure.ctx || (measure.ctx = document.createElement('canvas').getContext('2d')); c.font = "700 12px 'Titillium Web', system-ui, sans-serif"; return c.measureText(text).width; }
   catch (e) { return text.length * 7.3; }
 }
 function place(variants, candidates, h, bounds, obstacles) {   // First variant and position that fits the panel without touching anything.
@@ -342,7 +342,7 @@ function phases(c, xs, top, bottom, labels, maxX) {   // Plain-English phases of
 }
 function pill(box, text, fill, ink) {
   return `<rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="${box.h / 2}" fill="${fill}"/>`
-       + `<text class="label" x="${box.x + box.w / 2}" y="${box.y + box.h / 2 + 4}" fill="${ink}" text-anchor="middle" font-size="11">${esc(text)}</text>`;
+       + `<text class="label" x="${box.x + box.w / 2}" y="${box.y + box.h / 2 + 4}" fill="${ink}" text-anchor="middle">${esc(text)}</text>`;
 }
 
 function gapToVsc(v) {   // Seconds between a pit visit and the nearest VSC it does not overlap, and which side it is on.
@@ -519,5 +519,6 @@ const STATIC = KIND === 'pitclock' || KIND === 'event';  // Recorded times, so n
 function play() { start = null; reduced || STATIC ? frame(D.t1) : requestAnimationFrame(tick); }
 document.getElementById('replay').onclick = play;
 addEventListener('resize', () => frame(currentTime));
+if (document.fonts) document.fonts.ready.then(() => { measure.ctx = null; frame(currentTime); });   // Re-measure labels in the loaded font.
 play();
 </script></body></html>'''

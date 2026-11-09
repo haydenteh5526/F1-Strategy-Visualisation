@@ -30,7 +30,8 @@ class MatchedDashboardTests(unittest.TestCase):
         expected = pd.read_csv(ROOT/'docs/pace-tyre-exploration/stint_summary.csv')[actual.columns]
         keys = ['Team', 'Driver', 'Stint']
         pd.testing.assert_frame_equal(actual.sort_values(keys).reset_index(drop=True),
-                                      expected.sort_values(keys).reset_index(drop=True), check_dtype=False)
+                                      expected.sort_values(keys).reset_index(drop=True), check_dtype=False,
+                                      atol=1e-6, rtol=0)   # The saved slopes are rounded to six decimal places.
 
     def test_no_eligible_laps_or_teammate_does_not_invent_pairs(self):
         no_pace = self.laps.assign(EligibleForPace=False)
