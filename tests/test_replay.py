@@ -83,6 +83,14 @@ class ReplayRenderTests(unittest.TestCase):
         cls.laps = charts.load_data(ROOT/'data/processed/austria-2026')['laps']
         cls.page = lambda self, kind, height=480: replay.html(self.laps, kind, 'dark', height)
 
+    def test_a_redraw_keeps_only_the_boxes_and_points_it_drew(self):
+        for kind, height, hook in (('pitclock', 488, 'BOXES'), ('event', 800, 'BOXES'), ('event', 800, 'POINTS')):
+            with self.subTest(kind=kind, hook=hook):
+                page = self.page(kind, height)
+                once = evaluate(page, f'{hook}.length')
+                self.assertGreater(once, 0)
+                self.assertEqual(evaluate(page, f'(frame(D.t1), frame(D.t1), {hook}.length)'), once)   # As after a resize.
+
     def test_node_round_trips_unicode_independently_of_system_encoding(self):
         text = '\u2714 VSC \u00b7 \u26a0 boundary'
         page = '<script>document.getElementById("chart").innerHTML = ' + json.dumps(text, ensure_ascii=False) + ';</script>'

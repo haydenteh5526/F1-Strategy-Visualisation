@@ -173,6 +173,18 @@ class StoryAppTests(unittest.TestCase):
         self.assertAlmostEqual(table[('ANT', 51)], 48.957)
         self.assertTrue(pd.isna(table[('HAM', 25)]))   # The overlapping visit has no gap to report.
 
+    def test_matched_takeaway_states_tyre_age_ranges_and_single_laps(self):
+        def takeaway():
+            body = next(h.proto.body for h in self.app.get('html') if 'f1-takeaway' in h.proto.body)
+            return body.split('class="big">')[1].split('</div>')[0]
+        self.go_to(1)
+        self.app.radio[0].set_value('Matched race windows').run()
+        self.app.multiselect[0].set_value(['Red Bull Racing']).run()
+        self.assertIn('0.574 s slower on Hard in laps 41–60 (15 pairs, on tyres from 22 laps younger to 9 laps older)', takeaway())
+        self.assertIn("VER's; on matched laps", takeaway())   # Every gap points the same way, so no "but".
+        self.app.multiselect[0].set_value(['Ferrari']).run()
+        self.assertIn('(6 pairs, on tyres 1 lap older)', takeaway())
+
     def test_every_view_names_its_teams_and_source(self):
         self.app.multiselect[0].set_value(['Ferrari']).run()
         for slide in range(6):

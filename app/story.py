@@ -128,6 +128,19 @@ def pace_slide() -> None:
                'not a better strategy. Fuel load, traffic and conditions are not controlled.')
 
 
+def tyre_ages(row) -> str:
+    """How much younger or older driver A's tyres were across a matched window, in words; blank when always equal."""
+    low, high = row.MinimumTyreAgeDifference, row.MaximumTyreAgeDifference
+    laps = lambda d: f"{abs(d):.0f} lap{'' if abs(d) == 1 else 's'}"
+    if low == high:
+        return f", on tyres {laps(low)} {'younger' if low < 0 else 'older'}" if low else ''
+    if low < 0 < high:
+        return f', on tyres from {laps(low)} younger to {laps(high)} older'
+    if low >= 0:
+        return f", on tyres {'up to' if low == 0 else f'{abs(low):.0f} to'} {laps(high)} older"
+    return f", on tyres {'up to' if high == 0 else f'{abs(high):.0f} to'} {laps(low)} younger"
+
+
 def matched_contrast(summary: pd.DataFrame) -> str:
     """The team-mate pair whose matched windows differ most (5+ pairs each), set against their whole-race medians."""
     solid = summary.loc[summary.MatchedLaps.ge(5)]
@@ -139,16 +152,14 @@ def matched_contrast(summary: pd.DataFrame) -> str:
     typical = pace.groupby('Driver').LapTimeSeconds.median()
 
     def phrase(row) -> str:
-        same_age = row.MinimumTyreAgeDifference == row.MaximumTyreAgeDifference and row.MinimumTyreAgeDifference
-        age = (f", on tyres {abs(row.MinimumTyreAgeDifference):.0f} laps "
-               f"{'younger' if row.MinimumTyreAgeDifference < 0 else 'older'}") if same_age else ''
         return (f"{abs(row.MedianDifferenceSecondsAminusB):.3f} s {'slower' if row.MedianDifferenceSecondsAminusB > 0 else 'faster'} "
-                f'on {row.Compound.title()} in laps {row.Window} ({row.MatchedLaps} pairs{age})')
+                f'on {row.Compound.title()} in laps {row.Window} ({row.MatchedLaps} pairs{tyre_ages(row)})')
     high = groups.loc[groups.MedianDifferenceSecondsAminusB.idxmax()]
     low = groups.loc[groups.MedianDifferenceSecondsAminusB.idxmin()]
     whole = typical[a]-typical[b]
-    return (f"Over the whole race {a}'s typical lap was {abs(whole):.3f} s {'faster' if whole < 0 else 'slower'} than {b}'s, "
-            f'but on matched laps {a} was {phrase(high)} and {phrase(low)}.')
+    contrast = len({whole > 0, high.MedianDifferenceSecondsAminusB > 0, low.MedianDifferenceSecondsAminusB > 0}) > 1
+    return (f"Over the whole race {a}'s typical lap was {abs(whole):.3f} s {'faster' if whole < 0 else 'slower'} than {b}'s"
+            f"{', but' if contrast else ';'} on matched laps {a} was {phrase(high)} and {phrase(low)}.")
 
 
 def matched_pace_slide() -> None:

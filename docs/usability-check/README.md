@@ -33,5 +33,7 @@ Automated checks live in `tests/test_accessibility.py` and `tests/test_replay.py
 
 - Fixed 7 November 2026: tyre-age export labels now sit clear of every dot and label inside their panel, with a thin leader line where a label moved; matched-pace "n" labels just left of zero move to the far side so they no longer cross the zero line; the VSC export draws normal laps smaller so the VSC laps stand out. Tests check all three.
 - VSC export: normal-pace dots still overlap each other; read exact values from the dashboard view.
+- VSC export: normal laps were enlarged on 16 November 2026 (marker area 45, VSC laps 110) so team-mates' circles and triangles stay distinguishable; driver identity also comes from colour and the legend.
+- Tyre-age export label spacing is computed from Arial Bold 11 px widths (about 5.1 px a character, with margin), and the test checks those computed boxes rather than the rendered text. On a machine whose renderer substitutes a wider font, labels could still touch dots; re-export and check the image there.
 - Contrast was computed from the colours used, not measured from screenshots.
 - Not tested: real screen readers, Safari/Firefox, touch devices, printed output.
