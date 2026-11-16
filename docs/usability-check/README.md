@@ -15,7 +15,8 @@ Technical checks only. They do not replace the audience sessions in #8.
 
 | Check | Result |
 | --- | --- |
-| Layout at 420, 700, 1000 and 1500 px wide, all six views | 24 of 24 clean: no clipped chart text, no sideways page scroll |
+| Layout at 420, 700, 1000 and 1500 px wide, all six views | 24 of 24 clean: no clipped chart text, no sideways page scroll. Rechecked 7 November 2026, adding a check that every badge's text stays inside its pill |
+| Pit-clock badge (fixed 7 November 2026) | The Antonelli badge text ran past its pill ("TOO CLOSE TO CAL") because the pill was sized for 11 px text while the label style draws 12 px. Pills are now measured at 12 px, and the static views re-measure once the web font has loaded |
 | Narrow screens | Tyre panels switch to one column; pit-clock, event and tyre labels wrap or flip instead of running off the edge |
 | Keyboard | Arrow buttons are reachable with Tab and work with Enter; named "Previous chart" and "Next chart" |
 | Visible focus | 3 px white outline on buttons and controls |
@@ -30,8 +31,7 @@ Automated checks live in `tests/test_accessibility.py` and `tests/test_replay.py
 
 ## Remaining limitations
 
-- Tyre-age export: a few end-of-stint labels sit on top of dots (e.g. LEC "S1 M", HAM "S3 S") and the HAD/VER labels reach the panel edge. They stay readable.
-- Matched-pace export: "n" labels next to a point close to zero touch the zero line.
-- VSC export: the dots crowd together at normal pace; only the VSC laps stand out. The dashboard view is the clearer one.
+- Fixed 7 November 2026: tyre-age export labels now sit clear of every dot and label inside their panel, with a thin leader line where a label moved; matched-pace "n" labels just left of zero move to the far side so they no longer cross the zero line; the VSC export draws normal laps smaller so the VSC laps stand out. Tests check all three.
+- VSC export: normal-pace dots still overlap each other; read exact values from the dashboard view.
 - Contrast was computed from the colours used, not measured from screenshots.
 - Not tested: real screen readers, Safari/Firefox, touch devices, printed output.

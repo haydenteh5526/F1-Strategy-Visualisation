@@ -11,6 +11,23 @@ Evidence is recomputed from `data/processed/austria-2026/` and `docs/pit-vsc-exp
 | 5 | What do the laps around each VSC show? | 25 laps affected (21 of them not pit laps); slowest HAD lap 25 at 100.5 s against a 71.8 s normal-lap median; a ringed lap can finish outside the shaded zone | affected laps, 361-lap median |
 | Extra | Positions through the race | RUS won; the selected drivers finished RUS 1, VER 2, ANT 3, HAM 5, HAD 6, LEC 8 | final lap positions |
 
+## Plan check of the merged dashboard (7 November 2026)
+
+Each design card's intended message was compared with the live page on main `c88a1fe`. These were missing or only implied, and are now stated from the data:
+
+| Card | Added |
+| --- | --- |
+| 1 Tyre stints | "Two bars of the same colour in a row are two different sets": a pit stop starts a new stint even on the same tyre (ANT, Hard twice) |
+| 2 Matched pace | The Mercedes contrast as the takeaway: whole race ANT 0.018 s faster than RUS; matched laps ANT 0.155 s slower on Medium in laps 1–20 (16 pairs) and 0.883 s faster on Hard in laps 61–71 (11 pairs, tyres 8 laps younger) |
+| 3 Tyre age | HAM's used Soft set: recorded tyre age 3 laps on the first lap of the stint (FastF1 counts that lap, so this is not the age when fitted), 15 normal laps from a 17-lap stint. The stint table now shows the descriptive change per tyre lap (stints with at least five normal laps and two tyre ages), with a caption that it is not a wear rate |
+| 4 Pit/VSC clock | Seconds from the nearest VSC for every non-overlapping visit (ANT lap 24: 0.132 s; ANT lap 51: 48.957 s) |
+| 5 Event context | The first car to finish a lap can differ from lap to lap |
+| All views | A line under each view naming the teams shown and the source |
+
+The pick of each example is computed, not typed in: the matched takeaway uses the team-mate pair whose windows (5+ pairs each) differ most, and the tyre example uses the longest stint on a used set. Both change with the team filter.
+
+No new data was needed. Everything above comes from the prepared files already in the repository.
+
 ## Wording rules applied
 
 - Describe what the data shows; no "best strategy", no causal tyre wear, no live gaps.
