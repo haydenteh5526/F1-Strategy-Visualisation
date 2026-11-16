@@ -334,7 +334,7 @@ def vsc_chart(laps: pd.DataFrame, mode: str) -> alt.LayerChart:
     data = laps.loc[~(laps.IsFirstLap | laps.IsPitInLap | laps.IsPitOutLap)].assign(
         Phase=lambda d: d.HasVSC.map({True: 'VSC lap', False: 'Other lap'}))
     dots = alt.Chart(data).mark_point(filled=True, opacity=1, stroke=SURFACE[mode], strokeWidth=1).encode(
-        size=alt.Size('Phase:N', scale=alt.Scale(domain=['VSC lap', 'Other lap'], range=[110, 28]),
+        size=alt.Size('Phase:N', scale=alt.Scale(domain=['VSC lap', 'Other lap'], range=[110, 45]),
                       legend=alt.Legend(title='Lap type', orient='top')),
         x=alt.X('LapNumber:Q', title='Lap', scale=alt.Scale(domain=[1, int(laps.LapNumber.max())], nice=False)),
         y=alt.Y('LapTimeSeconds:Q', title='Lap time (s)', scale=alt.Scale(zero=False)),

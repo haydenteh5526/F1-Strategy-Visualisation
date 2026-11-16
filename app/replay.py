@@ -500,6 +500,7 @@ function eventFrame() {   // Lap time, position and gap at each lap completion a
 let currentTime = D.t0;
 function frame(t) {
   currentTime = t;
+  BOXES.length = 0; POINTS.length = 0;   // Only what this frame drew, not earlier draws.
   if (KIND === 'pitclock') return pitFrame();
   if (KIND === 'event') return eventFrame();
   if (KIND === 'pace') return paceFrame(Math.min(1, 3 * (t - D.t0) / (D.t1 - D.t0)));
