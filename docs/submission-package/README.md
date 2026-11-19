@@ -41,7 +41,7 @@ Use `--output path/to/check.json` to save the result for a review or coursework 
 ## Remaining acceptance work
 
 - Resolve the contrast and accessible-title findings on PR #22 and verify the accepted version.
-- Complete real audience sessions and evidence-linked decisions under #8; the protocol is available but responses remain pending.
+- Audience sessions: none recorded. #8 was closed as not planned on 19 November 2026; the submission must not claim audience feedback or feedback-driven changes.
 - Review the final message, dashboard, static sequence, captions and reference versions together.
 - Confirm the remaining charter arrangements and complete the presentation and individual coursework records.
 - Re-export and visually check the final PDFs before replacing the cumulative weekly submission.

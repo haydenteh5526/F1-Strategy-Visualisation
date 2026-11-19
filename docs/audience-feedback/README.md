@@ -4,9 +4,9 @@ Group Data Visualisation Project    Audience Feedback Form
 
 Use with the story prototype (`streamlit run app\story.py`) or the images in `figures/austria-2026/`. Show one chart at a time without explaining it first. Write down answers as given, and record no names or student IDs.
 
-**Status: audience feedback is pending.** Roy confirmed that no audience responses have been collected. The form and [session template](SESSION_TEMPLATE.md) are preparation materials, not completed feedback. Record the exact prototype commit or image shown, initial responses and approximate time to the main point. Keep any explanation given afterwards separate from the unaided response.
+**Status: no audience responses were recorded.** The dashboard was demoed to peers, but no written session records were kept, and #8 was closed as not planned on 19 November 2026. The form and [session template](SESSION_TEMPLATE.md) are preparation materials, not completed feedback, and are kept in case responses are collected later. Record the exact prototype commit or image shown, initial responses and approximate time to the main point. Keep any explanation given afterwards separate from the unaided response.
 
-See the [design rationale](../design-rationale.md) for intended tasks, alternatives and interpretation risks. Copy the template for each actual session and link completed anonymous records to the rationale, together with resulting changes or reasons for deferral. Keep issue #8 open until that evidence exists.
+See the [design rationale](../design-rationale.md) for intended tasks, alternatives and interpretation risks. Copy the template for each actual session and link completed anonymous records to the rationale, together with resulting changes or reasons for deferral.
 
 ## About the viewer
 

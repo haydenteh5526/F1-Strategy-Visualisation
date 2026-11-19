@@ -37,11 +37,11 @@ No new data was needed. Everything above comes from the prepared files already i
 
 ## Audience feedback (#8)
 
-The repository has no completed audience session records yet. The chart order, wording and supplementary positions view remain provisional. The event takeaway selects the slowest VSC-affected non-pit lap shown. With all teams selected, that was Hadjar's lap 25 (100.460 s). Some affected laps were close to the 71.809 s normal-racing median. Hadjar's lap 24 took 72.139 s. This is a wording and evidence check, independent of audience feedback.
+No audience session records were kept. The dashboard on main was demoed to peers, but their responses were not written down, and #8 was closed as not planned on 19 November 2026 because audience evidence is no longer required for the submission. No change to the dashboard is attributed to audience feedback. The chart order, wording and supplementary positions view are the team's final choices, based on the design plan and code review. The event takeaway selects the slowest VSC-affected non-pit lap shown. With all teams selected, that was Hadjar's lap 25 (100.460 s). Some affected laps were close to the 71.809 s normal-racing median. Hadjar's lap 24 took 72.139 s. This is a wording and evidence check, independent of audience feedback.
 
 ### Reading checks for the five primary views
 
-The starting point was merged main `60007cc`. Record the actual commit and filters used in each session. Use these checks when interpreting the viewer's first answer.
+These were prepared for the sessions and are kept in case the team collects responses later. The starting point was merged main `60007cc`. Record the actual commit and filters used in each session. Use these checks when interpreting the viewer's first answer.
 
 | View | What to listen for | Static output to recheck if the explanation changes |
 | --- | --- | --- |
@@ -61,6 +61,6 @@ The guide review also clarified zero overlaps when a team filter is active and i
 
 | View and session record | What the viewer said or did | Change, keep or defer, and why | Affected dashboard text or figure | Follow-up check and result |
 | --- | --- | --- | --- | --- |
-| Pending real responses | | | | |
+| None recorded (#8 closed as not planned) | | | | |
 
-Leave issue #18 open until the real feedback and the resulting decisions are linked. If audience-driven changes affect a chart or caption, verify it at the affected widths, recheck the corresponding static output under #19, and update the coursework report and Submission Checklist.
+With no recorded responses, there are no audience-driven decisions to link, so none are deferred either. If responses are collected later, record them here first. If audience-driven changes affect a chart or caption, verify it at the affected widths, recheck the corresponding static output under #19, and update the coursework report and Submission Checklist.

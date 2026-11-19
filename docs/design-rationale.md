@@ -1,6 +1,6 @@
 # Prototype design rationale
 
-This records the baseline layout on `Roys_Branch` at `818e132` and the subsequent main-branch story update for issue #8. It describes design intent and available evidence. Audience testing is pending; no comprehension or preference results are claimed. Sebastian's PR #15 is now merged into main at `b61a8e3`, following review of head `1e5e03e`. The Roy branch incorporates that merge through integration commit `65bf96d`.
+This records the baseline layout on `Roys_Branch` at `818e132` and the subsequent main-branch story update for issue #8. It describes design intent and available evidence. No audience responses were recorded (#8 closed as not planned on 19 November 2026); no comprehension or preference results are claimed. Sebastian's PR #15 is now merged into main at `b61a8e3`, following review of head `1e5e03e`. The Roy branch incorporates that merge through integration commit `65bf96d`.
 
 ## Audience and tasks
 
@@ -45,4 +45,4 @@ Test whether viewers can distinguish a used tyre's age from the length of its cu
 
 Automated tests check chart values, source counts, driver separation, recorded VSC clock behaviour, rendering, filters and slide navigation. They do not establish text readability on a projector, navigation discoverability or audience understanding.
 
-No audience sessions have been collected as of this review. For each session, record the exact build or static file shown, anonymous responses, time to main point, confusing elements and interpretation errors. Link each actual design decision to its response evidence and rerun the relevant checks after changing code or exports. Record a reason when a suggestion is declined or deferred. Keep issue #8 open until the response records and resulting decisions exist.
+No audience sessions were recorded: the dashboard was demoed to peers without written records, and #8 was closed as not planned. If sessions are run later, for each session record the exact build or static file shown, anonymous responses, time to main point, confusing elements and interpretation errors. Link each actual design decision to its response evidence and rerun the relevant checks after changing code or exports. Record a reason when a suggestion is declined or deferred.
