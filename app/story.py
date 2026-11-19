@@ -245,7 +245,10 @@ def pit_slide() -> None:
         text = 'None of the pit visits shown were on VSC-flagged laps.'
     if overlapping:
         names = ', '.join(f"{v['driver']} on lap {v['entryLap']}" for v in overlapping)
-        text += f' Only {len(overlapping)} ({names}) overlapped a recorded VSC period.'
+        if len(overlapping) < flagged:
+            text += f' Only {len(overlapping)} ({names}) overlapped a recorded VSC period.'
+        else:   # Every flagged visit overlapped, so "only" would mislead.
+            text += f" {'It' if flagged == 1 else f'All {flagged}'} ({names}) overlapped a recorded VSC period."
     else:
         text += ' No pit visits shown overlapped a recorded VSC period.'
     if close:
@@ -255,8 +258,15 @@ def pit_slide() -> None:
                    'The badge says how each flagged stop relates to the real VSC period, using the recorded times.'],
             ['A VSC flag on a lap only means the VSC happened at some point during that lap.',
              'The ringed visits are the ones with a flag. A bar overlapping the yellow zone shows time spent in the pit lane during a VSC.'])
-    st.write(f'Of the {len(visits_clock)} pit visits shown, {flagged} have a VSC flag on the entry or exit lap, '
-             f"but {len(overlapping)} {'overlaps' if len(overlapping) == 1 else 'overlap'} a VSC in the recorded timestamps.")
+    k = len(overlapping)
+    if not flagged:
+        summary = f'None of the {len(visits_clock)} pit visits shown has a VSC flag on the entry or exit lap.'
+    else:
+        summary = (f"Of the {len(visits_clock)} pit visits shown, {flagged} {'has' if flagged == 1 else 'have'} a VSC flag on the "
+                   'entry or exit lap, ' + ((f"and {'it overlaps' if flagged == 1 else 'all overlap'}") if k == flagged else
+                                           f"but {'none overlaps' if k == 0 else f'{k} overlaps' if k == 1 else f'{k} overlap'}")
+                   + ' a VSC in the recorded timestamps.')
+    st.write(summary)
     n = laps.Driver.nunique()
     st.iframe(replay.html(laps, 'pitclock', mode, 200+48*n), height=210+48*n, alt=replay.ARIA['pitclock'])
     st.caption('Each bar is one pit-lane visit, from entering to leaving, placed on the recorded session clock against the phases of '
