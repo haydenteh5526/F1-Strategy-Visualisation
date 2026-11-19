@@ -320,12 +320,11 @@ function wrapLines(text, maxWidth) {   // Breaks a sentence into lines no wider 
     if (line && measure(next) > maxWidth) { lines.push(line); line = word; } else line = next; }
   return lines.concat(line ? [line] : []);
 }
-function fitFrame(height) {   // The frame, and the page element holding it, grow when the panels stack on a narrow screen.
+function fitFrame(height) {   // Reset a reused iframe even when the next chart is shorter.
   svg.style.height = height + 'px';
-  if (typeof window === 'undefined' || !window.frameElement) return;
-  const frame = window.frameElement, holder = frame.closest('[data-testid="stElementContainer"]');
-  frame.style.height = (height + 6) + 'px';
-  if (holder) holder.style.height = (height + 6) + 'px';
+  if (typeof window !== 'undefined' && window.frameElement) {
+    window.frameElement.style.height = svg.style.height;
+  }
 }
 
 // ---- The two event views are static: they show recorded times, so nothing moves between lap completions. ----
@@ -522,5 +521,6 @@ function play() { start = null; reduced || STATIC ? frame(D.t1) : requestAnimati
 document.getElementById('replay').onclick = play;
 addEventListener('resize', () => frame(currentTime));
 if (document.fonts) document.fonts.ready.then(() => { measure.ctx = null; frame(currentTime); });   // Re-measure labels in the loaded font.
+fitFrame(H);
 play();
 </script></body></html>'''

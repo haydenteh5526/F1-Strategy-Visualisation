@@ -45,9 +45,11 @@ NODE = r"""
 const vm = require('vm'); let src = '';
 process.stdin.on('data', chunk => src += chunk).on('end', () => {
   const svg = {clientWidth: Number(process.env.WIDTH || 1240), innerHTML: '', style: {}};
+  const holder = {style: {}};
+  const frameElement = {style: {height: '1500px'}, closest: () => holder};
   const eventHandlers = {};
   const context = vm.createContext({document: {getElementById: id => id === 'chart' ? svg : {classList: {}}}, console,
-                                    svg, eventHandlers,
+                                    svg, eventHandlers, window: {frameElement},
                                     matchMedia: () => ({matches: process.env.REDUCED_MOTION !== '0'}),
                                     requestAnimationFrame: () => {}, addEventListener: (name, handler) => eventHandlers[name] = handler});
   vm.runInContext(src, context);  // Reduced motion, so this draws the finished race.
@@ -253,6 +255,18 @@ class ReplayRenderTests(unittest.TestCase):
             heights = {w: float(evaluate(self.page(kind, 800), 'svg.style.height', width=w).strip('"').replace('px', '')) for w in (420, 700, 1240)}
             self.assertGreater(heights[700], heights[1240], kind)
             self.assertGreater(heights[420], heights[1240], kind)
+
+    def test_chart_resizes_a_reused_iframe_without_leaving_a_height_on_the_page(self):
+        for kind, height in [('event', 800), ('positions', 420)]:
+            with self.subTest(kind=kind):
+                result = evaluate(self.page(kind, height), """({
+                    svgHeight: svg.style.height,
+                    frameHeight: window.frameElement.style.height,
+                    holderStyle: window.frameElement.closest().style
+                })""")
+                self.assertEqual(result['frameHeight'], result['svgHeight'])
+                self.assertLess(int(result['frameHeight'].removesuffix('px')), 1500)
+                self.assertEqual(result['holderStyle'], {})
 
     def test_every_affected_lap_carries_an_amber_ring(self):
         drawn = render(self.page('event', 800))
