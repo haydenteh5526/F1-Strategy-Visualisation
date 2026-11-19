@@ -36,4 +36,4 @@ The first command starts the dashboard. The exporter produces six images: the ex
 
 The recorded-clock pit and event exploration figures remain in `figures/austria-2026/pit-vsc/`, reproduced with `python scripts/explore_pit_vsc.py` and the retained raw snapshot. The generic `vsc.png` and `positions.png` exports remain supplementary views, not replacements for the clock-based evidence.
 
-Relevant checks cover agreement with reviewed window/stint tables, zero-eligible selections, team filtering, the empty-compound message, both chart themes, static rendering and existing replay behaviour. Technical checks do not establish audience understanding. Audience sessions remain under #8, story refinement under #18 and broader usability checks under #19.
+Relevant checks cover agreement with reviewed window/stint tables, zero-eligible selections, team filtering, the empty-compound message, both chart themes, static rendering and existing replay behaviour. Technical checks do not establish audience understanding. No audience sessions were recorded (#8 closed as not planned); story refinement is under #18 and broader usability checks under #19.

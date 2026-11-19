@@ -1,6 +1,6 @@
 # Audience session script (issue #8)
 
-**Status: script only; no session has been run.** About 15 minutes per viewer. Record in a copy of [SESSION_TEMPLATE.md](SESSION_TEMPLATE.md), using the viewer's own words. No names or student IDs.
+**Status: script only; no session was run with it.** The dashboard was demoed to peers, but no written feedback was kept, and #8 was closed as not planned on 19 November 2026. The script is kept in case the team collects responses later. About 15 minutes per viewer. Record in a copy of [SESSION_TEMPLATE.md](SESSION_TEMPLATE.md), using the viewer's own words. No names or student IDs.
 
 ## Before
 
@@ -35,4 +35,4 @@
 ## After
 
 - Fill the evidence-led decisions table: change made, declined or deferred, with the reason (no change is a valid result).
-- Link the finished records from [the design rationale](../design-rationale.md), update [story-review.md](../story-review.md), then close #8.
+- Link the finished records from [the design rationale](../design-rationale.md) and update [story-review.md](../story-review.md).

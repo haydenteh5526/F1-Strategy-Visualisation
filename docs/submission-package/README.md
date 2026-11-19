@@ -36,12 +36,12 @@ Raw snapshots, environments and credentials remain outside Git. Coursework copie
 
 Run `python scripts/check_submission_package.py` from the repository root. The script resolves default input paths relative to its own location. It checks the root README, draft report and package note's local file/image targets, verifies the report PNG headers and dimensions, compares all four exploration tables with values recomputed from the selected laps, checks audit sample counts and source provenance, and checks the raw-laps hash when that snapshot is installed. Missing or stale evidence returns a nonzero exit code.
 
-Use `--output path/to/check.json` to save the result for a review or coursework package. The output records counts and figure hashes so a later check can identify which assets were inspected. It reports its unverified acceptance criteria separately; a passing result does not close #20 or certify final dashboard/figure agreement. External URLs, anchor IDs, visual readability, audience evidence, individual records and the external coursework PDF/ZIP package still need their own checks. A missing raw snapshot is explicitly reported as unavailable, not verified.
+Use `--output path/to/check.json` to save the result for a review or coursework package. The output records counts and figure hashes so a later check can identify which assets were inspected. It reports its unverified acceptance criteria separately; a passing result does not close #20 or certify final dashboard/figure agreement. External URLs, anchor IDs, visual readability, individual records and the external coursework PDF/ZIP package still need their own checks. A missing raw snapshot is explicitly reported as unavailable, not verified. There is no audience evidence to check: no written feedback was kept, and #8 was closed as not planned.
 
 ## Remaining acceptance work
 
 - Resolve the contrast and accessible-title findings on PR #22 and verify the accepted version.
-- Complete real audience sessions and evidence-linked decisions under #8; the protocol is available but responses remain pending.
+- Audience sessions: none recorded. #8 was closed as not planned on 19 November 2026; the submission must not claim audience feedback or feedback-driven changes.
 - Review the final message, dashboard, static sequence, captions and reference versions together.
 - Confirm the remaining charter arrangements and complete the presentation and individual coursework records.
 - Re-export and visually check the final PDFs before replacing the cumulative weekly submission.

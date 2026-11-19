@@ -1,6 +1,6 @@
 # Audience session record — blank template
 
-**Status: template only; no session has been conducted or recorded here.** Copy this file to a separate session record when collecting real feedback. Leave unknown values blank rather than supplying assumed answers. Do not record names or student IDs.
+**Status: template only; no session was recorded with it.** The dashboard was demoed to peers, but no written feedback was kept, and #8 was closed as not planned on 19 November 2026. The template is kept in case the team collects responses later. Copy this file to a separate session record when collecting real feedback. Leave unknown values blank rather than supplying assumed answers. Do not record names or student IDs.
 
 ## Context
 
@@ -39,4 +39,4 @@ Complete only after reviewing actual responses. A session may reasonably lead to
 | --- | --- | --- | --- | --- |
 | | | | | |
 
-Link this completed record from the design rationale. Issue #8 remains pending until real responses and their resulting decisions are recorded; an empty template does not satisfy it.
+Link this completed record from the design rationale. An empty template is not feedback: record only responses actually given.
