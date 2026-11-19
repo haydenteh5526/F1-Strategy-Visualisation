@@ -37,4 +37,16 @@ No new data was needed. Everything above comes from the prepared files already i
 
 ## Audience feedback (#8)
 
-No audience sessions have been run yet. No changes are attributed to audience feedback. Wording, ordering and the "Extra" slide are provisional until the sessions are done; any change will be logged here with its reason.
+The repository has no completed audience session records yet. The chart order, wording and supplementary positions view remain provisional. The event takeaway selects the slowest VSC-affected non-pit lap shown. With all teams selected, that was Hadjar's lap 25 (100.460 s). Some affected laps were close to the 71.809 s normal-racing median. Hadjar's lap 24 took 72.139 s. This is a wording and evidence check, independent of audience feedback.
+
+### How to use the session notes
+
+1. Use the [session template](audience-feedback/SESSION_TEMPLATE.md) and link each completed anonymous record from the [design rationale](design-rationale.md). Keep each viewer's first answer separate from any help. Record the commit or exact export shown.
+2. Review the five primary views against what people actually understood. Prioritise confusion that changes the conclusion: matched pairs versus a whole-race comparison, tyre age versus wear, flagged laps versus recorded pit/VSC overlap, and same-lap intervals versus live gaps.
+3. Record a decision for each material observation. If the wording or layout stays as is, say why. If it changes, name the affected report figure or export so issue #19 can recheck it.
+
+| View and session record | What the viewer said or did | Change, keep or defer, and why | Affected dashboard text or figure | Follow-up check and result |
+| --- | --- | --- | --- | --- |
+| Pending real responses | | | | |
+
+Leave issue #18 open until the real feedback and the resulting decisions are linked. If audience-driven changes affect a chart or caption, verify it at the affected widths, recheck the corresponding static output, and update the report under #20.

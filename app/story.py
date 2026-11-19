@@ -22,7 +22,7 @@ GLOSSARY = {
                                 'VSC laps are slower, so they are not compared with normal racing laps.',
     'Pit-lane time': 'Time from entering to leaving the pit lane. It includes driving through the pit lane, '
                      'not just the time the car is stationary.',
-    'Lap-boundary interval': 'How long after the leader a driver finished the same lap. '
+    'Lap-boundary interval': 'Seconds behind the first car in the field to finish that lap. '
                              'It is measured once per lap at the finish line, not live.',
     'Pace eligibility': 'Whether a lap counts in pace comparisons. A normal racing lap is eligible: not lap 1, not a pit-stop lap, no VSC or yellow flag, '
                          'and not deleted or flagged by the timing data.',
@@ -266,20 +266,20 @@ def pit_slide() -> None:
 def event_slide() -> None:
     clock = replay.vsc_clock()
     window = pd.concat([laps[laps.LapNumber.between(c['before'], c['after'])] for c in clock]) if clock else laps.iloc[0:0]
-    valid = window[~(window.IsFirstLap | window.IsPitInLap | window.IsPitOutLap)]
-    if len(valid):
-        slowest = valid.loc[valid.LapTimeSeconds.idxmax()]
-        text = (f"When the VSC began, lap times jumped: the slowest lap was {slowest.Driver}'s lap {int(slowest.LapNumber)} at "
+    affected = window.loc[window.HasVSC & ~(window.IsFirstLap | window.IsPitInLap | window.IsPitOutLap)]
+    if not affected.empty:
+        slowest = affected.loc[affected.LapTimeSeconds.idxmax()]
+        text = (f"Of the VSC-affected laps shown without a pit stop, the slowest was {slowest.Driver}'s lap {int(slowest.LapNumber)} at "
                 f'{slowest.LapTimeSeconds:.1f} s')
         text += (f', against about {pace.LapTimeSeconds.median():.0f} s for a typical normal racing lap.' if len(pace)
                  else '. There are no normal racing laps in this selection to compare it with.')
     else:
-        text = 'No VSC laps for the selected teams.'
+        text = 'No VSC-affected laps without a pit stop are shown for this selection.'
     explain(text, ['There is one set of panels for each VSC. The clock shows seconds since that VSC started (<b>0 s</b>), so left of 0 is before it.',
                    'Top row: lap times. Middle row: race position (1 = leading). Bottom row: seconds behind the first car to finish that lap.',
                    'Each dot is one lap, placed at the moment its car <b>finished</b> that lap. A <b>hollow dot</b> is a lap that included a pit stop.',
                    'An <b>amber ring</b> marks a lap the VSC affected.'],
-            ['The amber-ringed laps are far slower than the dashed line, which marks a typical normal racing lap of the whole race.',
+            ['When shown, the dashed line marks the median normal racing lap for the selected drivers across the whole race. Use it as context for each ringed lap.',
              'The yellow zone shows the VSC status at that moment on the clock. A ringed lap can finish after the zone ends, because it was run partly under the VSC.',
              'Positions and lap-boundary intervals also move because cars were pitting at the same time. This shows what happened, not what the VSC caused.'])
     vsc = laps.loc[laps.HasVSC, 'LapNumber']

@@ -119,6 +119,9 @@ class StoryAppTests(unittest.TestCase):
         self.assertIn('only 1 (HAM on lap 25)', takeaway())
         self.go_to(4)
         self.assertIn("HAD's lap 25 at 100.5 s, against about 72 s for a typical normal racing lap", takeaway())
+        self.app.multiselect[0].set_value(['Ferrari']).run()
+        self.assertFalse(self.app.exception)
+        self.assertIn("LEC's lap 25 at 98.1 s", takeaway())
 
     def test_page_defines_terms_cites_sources_and_keeps_the_boundary_case(self):
         text = ' '.join(m.value for m in self.app.markdown)
