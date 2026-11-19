@@ -258,7 +258,7 @@ def event_slide() -> None:
     affected = window.loc[window.HasVSC & ~(window.IsFirstLap | window.IsPitInLap | window.IsPitOutLap)]
     if not affected.empty:
         slowest = affected.loc[affected.LapTimeSeconds.idxmax()]
-        text = (f"The slowest VSC-affected lap without a pit stop shown here was {slowest.Driver}'s lap {int(slowest.LapNumber)} at "
+        text = (f"Of the VSC-affected laps shown without a pit stop, the slowest was {slowest.Driver}'s lap {int(slowest.LapNumber)} at "
                 f'{slowest.LapTimeSeconds:.1f} s')
         text += (f', against about {pace.LapTimeSeconds.median():.0f} s for a typical normal racing lap.' if len(pace)
                  else '. There are no normal racing laps in this selection to compare it with.')

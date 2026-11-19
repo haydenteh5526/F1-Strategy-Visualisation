@@ -37,7 +37,7 @@ No new data was needed. Everything above comes from the prepared files already i
 
 ## Audience feedback (#8)
 
-The repository has no completed audience session records yet. The chart order, wording and supplementary positions view remain provisional. The event takeaway now selects the slowest VSC-affected non-pit lap shown rather than the slowest lap anywhere in either window. Hadjar's lap 25 is still the example with all teams selected (100.460 s). Other affected laps are much closer to the 71.809 s normal-racing median: Hadjar's lap 24 took 72.139 s. This is a wording and evidence check, independent of audience feedback.
+The repository has no completed audience session records yet. The chart order, wording and supplementary positions view remain provisional. The event takeaway selects the slowest VSC-affected non-pit lap shown. With all teams selected, that was Hadjar's lap 25 (100.460 s). Some affected laps were close to the 71.809 s normal-racing median. Hadjar's lap 24 took 72.139 s. This is a wording and evidence check, independent of audience feedback.
 
 ### How to use the session notes
 
