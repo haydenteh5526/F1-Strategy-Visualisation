@@ -37,7 +37,7 @@ No new data was needed. Everything above comes from the prepared files already i
 
 ## Audience feedback (#8)
 
-No audience session records were kept. The dashboard on main was demoed to peers, but their responses were not written down, and #8 was closed as not planned on 19 November 2026 because audience evidence is no longer required for the submission. No change to the dashboard is attributed to audience feedback. The chart order, wording and supplementary positions view are the team's final choices, based on the design plan and code review. The event takeaway selects the slowest VSC-affected non-pit lap shown. With all teams selected, that was Hadjar's lap 25 (100.460 s). Some affected laps were close to the 71.809 s normal-racing median. Hadjar's lap 24 took 72.139 s. This is a wording and evidence check, independent of audience feedback.
+No audience session records were kept. The dashboard on main was demoed to peers, but their responses were not written down, and #8 was closed as not planned on 19 November 2026 because audience evidence is no longer required for the submission. No change to the dashboard is attributed to audience feedback. The chart order, wording and supplementary positions view are the team's current choices, based on the design plan and code review. The event takeaway selects the slowest VSC-affected non-pit lap shown. With all teams selected, that was Hadjar's lap 25 (100.460 s). Some affected laps were close to the 71.809 s normal-racing median. Hadjar's lap 24 took 72.139 s. This is a wording and evidence check, independent of audience feedback.
 
 ### Reading checks for the five primary views
 

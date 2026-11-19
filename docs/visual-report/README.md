@@ -1,5 +1,7 @@
 # F1 Strategy Visualisation draft visual report
 
+> **Status note (19 November 2026):** this draft is kept as a record of the 22 October version. Since then PR #22 has merged, and no audience feedback was recorded: the dashboard was demoed to peers without written records, and #8 was closed as not planned. Where this draft says audience sessions are pending, read it in that light.
+
 Draft for review; audience feedback and pending story/accessibility corrections are not complete.
 
 ## Project purpose and audience
