@@ -238,15 +238,19 @@ def pit_slide() -> None:
     flagged = sum(v['whole'] for v in visits_clock)
     overlapping = [v for v in visits_clock if v['overlap'] > 0]
     close = [v for v in visits_clock if v['near'] and v['overlap'] == 0]
-    names = ', '.join(f"{v['driver']} on lap {v['entryLap']}" for v in overlapping)
-    text = f'{flagged} pit stops were on laps marked with a VSC flag, but only {len(overlapping)} ({names}) happened while the VSC was active.'
+    if overlapping:
+        names = ', '.join(f"{v['driver']} on lap {v['entryLap']}" for v in overlapping)
+        text = f'{flagged} pit visits were on laps marked with a VSC flag. Only {len(overlapping)} ({names}) overlapped a recorded VSC period.'
+    else:
+        flagged_label = 'visit was' if flagged == 1 else 'visits were'
+        text = f'{flagged} pit {flagged_label} on laps marked with a VSC flag. No pit visits shown overlapped a recorded VSC period.'
     if close:
         text += ' ' + ' '.join(f"{v['driver']}'s lap {v['entryLap']} stop ended just {v['nearest']:.3f} s before it began, too close to call." for v in close)
     explain(text, ['Each <b>coloured bar</b> is one car driving through the <b>pit lane</b> (the road where cars change tyres), from entering to leaving.',
                    'The <b>yellow zone</b> is a Virtual Safety Car (VSC) period. It begins at <b>VSC starts</b>, when every car must slow down; the lighter part after <b>VSC ending</b> is the last stretch before <b>racing again</b>.',
                    'The badge says how each flagged stop relates to the real VSC period, using the recorded times.'],
             ['A VSC flag on a lap only means the VSC happened at some point during that lap.',
-             'The ringed stops are the ones with a flag. The bars are placed by recorded times, so you can see who really stopped inside the yellow zone.'])
+             'The ringed visits are the ones with a flag. A bar overlapping the yellow zone shows time spent in the pit lane during a VSC.'])
     st.write(f'Of the {len(visits_clock)} pit visits shown, {flagged} have a VSC flag on the entry or exit lap, '
              f"but {len(overlapping)} {'overlaps' if len(overlapping) == 1 else 'overlap'} a VSC in the recorded timestamps.")
     n = laps.Driver.nunique()
@@ -277,7 +281,8 @@ def event_slide() -> None:
         text = 'No VSC-affected laps without a pit stop are shown for this selection.'
     explain(text, ['There is one set of panels for each VSC. The clock shows seconds since that VSC started (<b>0 s</b>), so left of 0 is before it.',
                    'Top row: lap times. Middle row: race position (1 = leading). Bottom row: seconds behind the first car to finish that lap.',
-                   'Each dot is one lap, placed at the moment its car <b>finished</b> that lap. A <b>hollow dot</b> is a lap that included a pit stop.',
+                   'Each dot is one lap, placed at the moment its car <b>finished</b> that lap. The lap-time row omits pit-entry and pit-exit laps. '
+                   'In the other two rows, a <b>hollow dot</b> marks one of those laps.',
                    'An <b>amber ring</b> marks a lap the VSC affected.'],
             ['When shown, the dashed line marks the median normal racing lap for the selected drivers across the whole race. Use it as context for each ringed lap.',
              'The yellow zone shows the VSC status at that moment on the clock. A ringed lap can finish after the zone ends, because it was run partly under the VSC.',

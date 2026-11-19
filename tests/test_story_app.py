@@ -101,6 +101,14 @@ class StoryAppTests(unittest.TestCase):
         self.assertIn('requires the recorded event clock', message)
         self.assertTrue(any('3 have a VSC flag on the entry or exit lap, but 1 overlap' in m.value for m in self.app.markdown))
 
+    def test_pit_takeaway_explains_flagged_visits_without_overlap(self):
+        self.app.multiselect[0].set_value(['Mercedes']).run()
+        self.go_to(3)
+        guide = next(h.proto.body for h in self.app.get('html') if 'f1-takeaway' in h.proto.body)
+        self.assertIn('2 pit visits were on laps marked with a VSC flag.', guide)
+        self.assertIn('No pit visits shown overlapped a recorded VSC period.', guide)
+        self.assertIn('ended just 0.132 s before it began', guide)
+
     def test_every_slide_explains_itself_in_plain_english(self):
         for slide in range(6):
             self.go_to(slide)
@@ -116,7 +124,7 @@ class StoryAppTests(unittest.TestCase):
         self.go_to(1)
         self.assertIn('ANT was quickest (71.64 s)', takeaway())
         self.go_to(3)
-        self.assertIn('only 1 (HAM on lap 25)', takeaway())
+        self.assertIn('Only 1 (HAM on lap 25) overlapped a recorded VSC period.', takeaway())
         self.go_to(4)
         self.assertIn("HAD's lap 25 at 100.5 s, against about 72 s for a typical normal racing lap", takeaway())
         self.app.multiselect[0].set_value(['Ferrari']).run()
