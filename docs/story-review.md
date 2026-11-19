@@ -39,6 +39,20 @@ No new data was needed. Everything above comes from the prepared files already i
 
 The repository has no completed audience session records yet. The chart order, wording and supplementary positions view remain provisional. The event takeaway selects the slowest VSC-affected non-pit lap shown. With all teams selected, that was Hadjar's lap 25 (100.460 s). Some affected laps were close to the 71.809 s normal-racing median. Hadjar's lap 24 took 72.139 s. This is a wording and evidence check, independent of audience feedback.
 
+### Reading checks for the five primary views
+
+The starting point was merged main `60007cc`. Record the actual commit and filters used in each session. Use these checks when interpreting the viewer's first answer.
+
+| View | What to listen for | Static output to recheck if the explanation changes |
+| --- | --- | --- |
+| Tyre sequences | A pit stop can start a new set of the same compound. The bar length counts race laps. | `stint-timeline.png` |
+| Pace | The overview compares eligible laps across the race. A matched point compares teammates on the same race laps and compound. The count is the number of pairs. | `pace.png`, `pace-matched.png` |
+| Tyre age | Recorded age counts laps on the set. A used set can start a stint above age one. | `tyre-age.png` |
+| Pit visits and the VSC clock | A lap flag and an overlap are distinct. An overlap means the car spent time in the pit lane during the recorded VSC. | `pit-vsc/pit-status-windows.png`, `positions.png` (pit markers) |
+| VSC event context | An affected lap can finish after the yellow zone. The bottom row measures seconds behind the first car to finish that same lap. | `pit-vsc/vsc-lap-times.png`, `pit-vsc/positions-and-intervals.png`, `vsc.png`, `positions.png` |
+
+The guide review also clarified zero overlaps when a team filter is active and identified which rows retain markers for pit-entry and pit-exit laps. These are corrections to how the guides describe the displayed data.
+
 ### How to use the session notes
 
 1. Use the [session template](audience-feedback/SESSION_TEMPLATE.md) and link each completed anonymous record from the [design rationale](design-rationale.md). Keep each viewer's first answer separate from any help. Record the commit or exact export shown.
@@ -49,4 +63,4 @@ The repository has no completed audience session records yet. The chart order, w
 | --- | --- | --- | --- | --- |
 | Pending real responses | | | | |
 
-Leave issue #18 open until the real feedback and the resulting decisions are linked. If audience-driven changes affect a chart or caption, verify it at the affected widths, recheck the corresponding static output, and update the report under #20.
+Leave issue #18 open until the real feedback and the resulting decisions are linked. If audience-driven changes affect a chart or caption, verify it at the affected widths, recheck the corresponding static output under #19, and update the coursework report and Submission Checklist.
