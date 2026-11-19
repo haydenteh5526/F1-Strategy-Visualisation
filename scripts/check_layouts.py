@@ -1,10 +1,11 @@
 """Check every dashboard view at several window widths for clipped chart text and sideways scrolling.
 
-Starts the Streamlit story app, opens each view with ``?chart=N`` in headless Chromium and checks that:
-- the page does not scroll sideways;
-- no chart frame scrolls sideways;
+Starts the Streamlit story app, opens each view with ``?chart=N`` (and view 2 again with "Matched race windows" selected)
+in headless Chromium, waits for its chart to draw and checks that:
+- a chart was actually inspected (a view whose chart never drew, or is empty, fails);
+- the page and each chart do not scroll sideways;
 - every piece of chart text lies inside its drawing;
-- every pit-clock badge's text stays inside its pill.
+- every badge's label stays inside its pill, and the pit view shows at least three badges.
 
 Usage: python scripts/check_layouts.py [--widths 420 700 1000 1500] [--json results.json]
 Needs: pip install playwright, then python -m playwright install chromium (or a system Chrome).
@@ -22,26 +23,35 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-VIEWS = 6
 TOLERANCE = 1   # Pixels of anti-aliasing allowed at an edge.
 
-FRAME_CHECK = """(tol) => {
-  const out = {sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + tol, clipped: [], badges: []};
-  for (const svg of document.querySelectorAll('svg')) {
-    const box = svg.getBoundingClientRect();
-    if (!box.width || !box.height) continue;
-    for (const t of svg.querySelectorAll('text')) {
-      const r = t.getBoundingClientRect();
-      if (!t.textContent.trim() || !r.width) continue;
-      if (r.left < box.left - tol || r.right > box.right + tol || r.top < box.top - tol || r.bottom > box.bottom + tol)
-        out.clipped.push(t.textContent.trim().slice(0, 60));
-    }
-    for (const g of svg.querySelectorAll('g')) {     // A badge is a rounded rect with its label drawn on top.
-      const pill = [...g.children].find(c => c.tagName === 'rect' && +c.getAttribute('rx') > 0);
-      const label = [...g.children].find(c => c.tagName === 'text');
-      if (!pill || !label) continue;
-      const p = pill.getBoundingClientRect(), l = label.getBoundingClientRect();
-      if (l.left < p.left - tol || l.right > p.right + tol) out.badges.push(label.textContent.trim().slice(0, 60));
+CHART_CHECK = """([selector, tol]) => {
+  // Every chart drawing inside the given containers: text inside its drawing, badge labels inside their pills.
+  const out = {charts: 0, texts: 0, badges: 0, sideways: false, clipped: [], badgeOverflow: []};
+  for (const host of document.querySelectorAll(selector)) {
+    if (host.scrollWidth > host.clientWidth + tol) out.sideways = true;
+    for (const svg of host.querySelectorAll('svg')) {
+      const box = svg.getBoundingClientRect();
+      const texts = [...svg.querySelectorAll('text')].filter(t => t.textContent.trim());
+      if (!box.width || !box.height || texts.length < 5) continue;   // Icons and empty drawings are not charts.
+      out.charts += 1;
+      for (const t of texts) {
+        const r = t.getBoundingClientRect();
+        if (!r.width) continue;
+        out.texts += 1;
+        if (r.left < box.left - tol || r.right > box.right + tol || r.top < box.top - tol || r.bottom > box.bottom + tol)
+          out.clipped.push(t.textContent.trim().slice(0, 60));
+      }
+      // A badge is drawn as a filled rounded rectangle immediately followed by its label (replay.js pill()).
+      for (const pill of svg.querySelectorAll('rect[rx]')) {
+        const label = pill.nextElementSibling;
+        if (+pill.getAttribute('rx') <= 0 || pill.getAttribute('fill') === 'none' || !label || label.tagName !== 'text') continue;
+        if (label.getAttribute('text-anchor') !== 'middle' || label.getAttribute('class') !== 'label') continue;   // Pill labels are centred; a driver chip's name sits beside it.
+        out.badges += 1;
+        const p = pill.getBoundingClientRect(), l = label.getBoundingClientRect();
+        if (l.left < p.left - tol || l.right > p.right + tol || l.top < p.top - tol || l.bottom > p.bottom + tol)
+          out.badgeOverflow.push(label.textContent.trim().slice(0, 60));
+      }
     }
   }
   return out;
@@ -66,7 +76,31 @@ def wait_for(url: str, seconds: float = 60) -> None:
     raise RuntimeError(f'Streamlit did not start at {url}')
 
 
-def check(widths: list[int], height: int = 900) -> list[dict]:
+# (view number, label, pace comparison to select or None). View 2's matched chart is drawn on the main page, not in a frame.
+CASES = [(1, '1', None), (2, '2', None), (2, '2 matched', 'Matched race windows'), (3, '3', None), (4, '4', None),
+         (5, '5', None), (6, '6', None)]
+MIN_BADGES = {'4': 3}   # The pit view always shows a badge for each VSC-flagged visit (three with all teams selected).
+
+
+def inspect(page) -> dict:
+    """Run the chart check in the main page's Vega charts and in every frame's body; merge the results."""
+    total = {'charts': 0, 'texts': 0, 'badges': 0, 'framesSideways': 0, 'clipped': [], 'badges_overflow': []}
+    targets = [(page.main_frame, '[data-testid="stVegaLiteChart"]')] + [(f, 'body') for f in page.frames[1:]]
+    for frame, selector in targets:
+        try:
+            r = frame.evaluate(CHART_CHECK, [selector, TOLERANCE])
+        except Exception:
+            continue   # A frame that navigated away or is still loading; the chart count below catches a missing chart.
+        total['charts'] += r['charts']
+        total['texts'] += r['texts']
+        total['badges'] += r['badges']
+        total['framesSideways'] += r['sideways']
+        total['clipped'] += r['clipped']
+        total['badges_overflow'] += r['badgeOverflow']
+    return total
+
+
+def check(widths: list[int], height: int = 900, settle_ms: int = 1500, timeout_s: float = 45) -> list[dict]:
     port = free_port()
     server = subprocess.Popen([sys.executable, '-m', 'streamlit', 'run', str(ROOT/'app/story.py'), '--server.headless', 'true',
                                '--server.port', str(port), '--browser.gatherUsageStats', 'false'],
@@ -82,22 +116,32 @@ def check(widths: list[int], height: int = 900) -> list[dict]:
                 browser = p.chromium.launch(channel='chrome')
             for width in widths:
                 page = browser.new_page(viewport={'width': width, 'height': height}, reduced_motion='reduce')
-                for view in range(1, VIEWS+1):
+                for view, label, comparison in CASES:
                     page.goto(f'{base}/?chart={view}', wait_until='networkidle')
-                    page.wait_for_selector('iframe, [data-testid="stVegaLiteChart"]', state='attached', timeout=60000)
-                    page.wait_for_timeout(2500)   # Let charts finish drawing and re-measure after web fonts load.
-                    found = {'width': width, 'view': view, 'pageSideways': page.evaluate(
-                        'document.documentElement.scrollWidth > document.documentElement.clientWidth + 1'),
-                        'framesSideways': 0, 'clipped': [], 'badges': []}
-                    for frame in page.frames[1:]:
-                        try:
-                            r = frame.evaluate(FRAME_CHECK, TOLERANCE)
-                        except Exception:
-                            continue
-                        found['framesSideways'] += r['sideways']
-                        found['clipped'] += r['clipped']
-                        found['badges'] += r['badges']
-                    found['clean'] = not (found['pageSideways'] or found['framesSideways'] or found['clipped'] or found['badges'])
+                    if comparison:
+                        page.get_by_text(comparison, exact=True).click()
+                    # Wait until a real chart has drawn (not just a helper frame), then let it re-measure after fonts load.
+                    found, end = inspect(page), time.time() + timeout_s
+                    while found['charts'] == 0 and time.time() < end:
+                        page.wait_for_timeout(500)
+                        found = inspect(page)
+                    page.wait_for_timeout(settle_ms)
+                    found = inspect(page)
+                    found.update(width=width, view=label, pageSideways=page.evaluate(
+                        'document.documentElement.scrollWidth > document.documentElement.clientWidth + 1'))
+                    problems = []
+                    if found['charts'] == 0:
+                        problems.append('no chart could be inspected')
+                    if found['badges'] < MIN_BADGES.get(label, 0):
+                        problems.append(f"only {found['badges']} badges inspected, expected at least {MIN_BADGES[label]}")
+                    if found['pageSideways']:
+                        problems.append('page scrolls sideways')
+                    if found['framesSideways']:
+                        problems.append('a chart scrolls sideways')
+                    problems += [f'clipped: {t}' for t in found['clipped']]
+                    problems += [f'badge overflow: {t}' for t in found['badges_overflow']]
+                    found['problems'] = problems
+                    found['clean'] = not problems
                     results.append(found)
                 page.close()
             browser.close()
@@ -114,9 +158,8 @@ def main() -> int:
     args = parser.parse_args()
     results = check(args.widths)
     for r in results:
-        problems = [k for k in ('pageSideways', 'framesSideways') if r[k]] + [f'clipped: {t}' for t in r['clipped']] \
-            + [f'badge overflow: {t}' for t in r['badges']]
-        print(f"{r['width']:>5} px  view {r['view']}  {'clean' if r['clean'] else '; '.join(problems)}")
+        checked = f"{r['charts']} chart(s), {r['texts']} labels, {r['badges']} badges"
+        print(f"{r['width']:>5} px  view {r['view']:<10} {checked:<38} {'clean' if r['clean'] else '; '.join(r['problems'])}")
     clean = sum(r['clean'] for r in results)
     print(f'{clean} of {len(results)} view/width combinations clean')
     if args.json:

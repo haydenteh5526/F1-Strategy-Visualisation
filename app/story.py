@@ -176,7 +176,9 @@ def matched_pace_slide() -> None:
     if selected.empty:
         st.info('No same-lap, same-compound eligible teammate pairs for this selection. Missing pairs are not zero differences.')
         return
-    st.altair_chart(charts.matched_pace_chart(selected, mode), width='stretch')
+    # Extra left padding: the rotated "A − B" axis title sat 2 px past the drawing's left edge and was clipped.
+    st.altair_chart(charts.matched_pace_chart(selected, mode).properties(padding={'left': 8, 'top': 5, 'right': 5, 'bottom': 5}),
+                    width='stretch')
     table = selected[['Pair', 'Team', 'MatchedLaps', 'MedianDifferenceSecondsAminusB',
                       'MinimumTyreAgeDifference', 'MaximumTyreAgeDifference']].rename(columns={
         'Pair': 'A − B', 'MatchedLaps': 'Matched pairs',
