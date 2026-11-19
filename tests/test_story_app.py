@@ -101,13 +101,23 @@ class StoryAppTests(unittest.TestCase):
         self.assertIn('requires the recorded event clock', message)
         self.assertTrue(any('3 have a VSC flag on the entry or exit lap, but 1 overlap' in m.value for m in self.app.markdown))
 
-    def test_pit_takeaway_explains_flagged_visits_without_overlap(self):
-        self.app.multiselect[0].set_value(['Mercedes']).run()
+    def test_pit_takeaway_explains_flags_and_overlap_for_each_team(self):
         self.go_to(3)
-        guide = next(h.proto.body for h in self.app.get('html') if 'f1-takeaway' in h.proto.body)
-        self.assertIn('2 pit visits were on laps marked with a VSC flag.', guide)
-        self.assertIn('No pit visits shown overlapped a recorded VSC period.', guide)
-        self.assertIn('ended just 0.132 s before it began', guide)
+        no_overlap = 'No pit visits shown overlapped a recorded VSC period.'
+        expectations = {
+            'Ferrari': ('1 pit visit was on a lap marked with a VSC flag.',
+                        'Only 1 (HAM on lap 25) overlapped a recorded VSC period.'),
+            'Mercedes': ('2 pit visits were on laps marked with a VSC flag.', no_overlap,
+                         'ended just 0.132 s before it began'),
+            'Red Bull Racing': ('None of the pit visits shown were on VSC-flagged laps.', no_overlap),
+        }
+        for team, phrases in expectations.items():
+            with self.subTest(team=team):
+                self.app.multiselect[0].set_value([team]).run()
+                self.assertFalse(self.app.exception)
+                guide = next(h.proto.body for h in self.app.get('html') if 'f1-takeaway' in h.proto.body)
+                for phrase in phrases:
+                    self.assertIn(phrase, guide)
 
     def test_every_slide_explains_itself_in_plain_english(self):
         for slide in range(6):

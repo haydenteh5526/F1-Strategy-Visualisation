@@ -238,12 +238,16 @@ def pit_slide() -> None:
     flagged = sum(v['whole'] for v in visits_clock)
     overlapping = [v for v in visits_clock if v['overlap'] > 0]
     close = [v for v in visits_clock if v['near'] and v['overlap'] == 0]
+    if flagged:
+        flagged_label = 'visit was on a lap' if flagged == 1 else 'visits were on laps'
+        text = f'{flagged} pit {flagged_label} marked with a VSC flag.'
+    else:
+        text = 'None of the pit visits shown were on VSC-flagged laps.'
     if overlapping:
         names = ', '.join(f"{v['driver']} on lap {v['entryLap']}" for v in overlapping)
-        text = f'{flagged} pit visits were on laps marked with a VSC flag. Only {len(overlapping)} ({names}) overlapped a recorded VSC period.'
+        text += f' Only {len(overlapping)} ({names}) overlapped a recorded VSC period.'
     else:
-        flagged_label = 'visit was' if flagged == 1 else 'visits were'
-        text = f'{flagged} pit {flagged_label} on laps marked with a VSC flag. No pit visits shown overlapped a recorded VSC period.'
+        text += ' No pit visits shown overlapped a recorded VSC period.'
     if close:
         text += ' ' + ' '.join(f"{v['driver']}'s lap {v['entryLap']} stop ended just {v['nearest']:.3f} s before it began, too close to call." for v in close)
     explain(text, ['Each <b>coloured bar</b> is one car driving through the <b>pit lane</b> (the road where cars change tyres), from entering to leaving.',

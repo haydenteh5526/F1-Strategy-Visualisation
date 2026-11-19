@@ -48,8 +48,8 @@ The starting point was merged main `60007cc`. Record the actual commit and filte
 | Tyre sequences | A pit stop can start a new set of the same compound. The bar length counts race laps. | `stint-timeline.png` |
 | Pace | The overview compares eligible laps across the race. A matched point compares teammates on the same race laps and compound. The count is the number of pairs. | `pace.png`, `pace-matched.png` |
 | Tyre age | Recorded age counts laps on the set. A used set can start a stint above age one. | `tyre-age.png` |
-| Pit visits and the VSC clock | A lap flag and an overlap are distinct. An overlap means the car spent time in the pit lane during the recorded VSC. | `pit-vsc/pit-status-windows.png` |
-| VSC event context | An affected lap can finish after the yellow zone. The bottom row measures seconds behind the first car to finish that same lap. | `pit-vsc/vsc-lap-times.png`, `pit-vsc/positions-and-intervals.png` |
+| Pit visits and the VSC clock | A lap flag and an overlap are distinct. An overlap means the car spent time in the pit lane during the recorded VSC. | `pit-vsc/pit-status-windows.png`, `positions.png` (pit markers) |
+| VSC event context | An affected lap can finish after the yellow zone. The bottom row measures seconds behind the first car to finish that same lap. | `pit-vsc/vsc-lap-times.png`, `pit-vsc/positions-and-intervals.png`, `vsc.png`, `positions.png` |
 
 The guide review also clarified zero overlaps when a team filter is active and identified which rows retain markers for pit-entry and pit-exit laps. These are corrections to how the guides describe the displayed data.
 
