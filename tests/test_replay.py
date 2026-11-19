@@ -157,6 +157,18 @@ class ReplayRenderTests(unittest.TestCase):
         self.assertRegex(drawn, r'>slowest: HAD (lap 25 · )?100\.5 s<')
         self.assertRegex(drawn, r'>slowest: LEC (lap 52 · )?82\.0 s<')
 
+    def test_clock_views_use_short_labels_at_phone_width(self):
+        # A 420 px window leaves a 356 px chart; the long axis title and one-line key ran past its edge.
+        for kind, height in (('event', 1500), ('pitclock', 700)):
+            with self.subTest(kind=kind):
+                narrow, wide = render(self.page(kind, height), width=356), render(self.page(kind, height), width=1240)
+                self.assertNotIn('(0 = the moment it started)', narrow)
+                self.assertIn('>Seconds since the VSC started<', narrow)
+                self.assertIn('Seconds since this VSC started (0 = the moment it started)', wide)
+        narrow = render(self.page('event', 1500), width=356)
+        self.assertIn('>dashed line = a typical normal racing lap<', narrow)
+        self.assertIn('≈ 71.8 s, median of all 361 normal laps', narrow)
+
     def test_event_views_are_static_and_say_so(self):
         for kind in ['pitclock', 'event']:
             page = self.page(kind, 800)

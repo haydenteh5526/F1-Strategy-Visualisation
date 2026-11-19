@@ -385,7 +385,7 @@ function pitFrame() {   // Every pit-lane visit against the recorded VSC clock.
     });
     s += `<text class="label" x="${ox}" y="${top0 + 14}" fill="${D.ink}">${c.name}: every pit-lane visit near it</text>` + phases(c, xs, top, bottom, true, panelEnd);
     for (let v = Math.ceil(lo / 50) * 50; v <= hi; v += 50) s += `<text class="axis" x="${xs(v)}" y="${bottom + 16}" fill="${D.ink}" text-anchor="middle">${v}</text>`;
-    s += `<text class="axis" x="${ox + (hi - lo) * unit / 2}" y="${bottom + 32}" fill="${D.ink}" text-anchor="middle" font-weight="700">Seconds since this VSC started (0 = the moment it started)</text>`;
+    s += `<text class="axis" x="${ox + (hi - lo) * unit / 2}" y="${bottom + 32}" fill="${D.ink}" text-anchor="middle" font-weight="700">${clockTitle(W)}</text>`;
     const visits = D.pits.filter(v => v.exit - c.start >= lo && v.entry - c.start <= hi), obstacles = [], placed = [];
     for (const v of visits) {   // Bars first, so the badges can be placed clear of every bar.
       const e0 = v.entry - c.start, e1 = v.exit - c.start, d = teamOf(v.driver), y = top + row * (D.drivers.indexOf(d) + .5), x0 = xs(e0), x1 = xs(e1);
@@ -444,7 +444,7 @@ function eventFrame() {   // Lap time, position and gap at each lap completion a
                 {title: 'Seconds behind the first car', f: p => p.gap, lo: 0, hi: maxGap, flip: true, step: 10}];
   let s = legend(M.l + 6, 14, perRow);
   const keyText = D.normalLap === null ? ['no normal racing laps for this selection, so there is no reference line']
-    : narrow ? [`dashed line = a typical normal racing lap ≈ ${D.normalLap.toFixed(1)} s`, `(median of all ${D.normalLaps} normal laps)`]
+    : narrow ? ['dashed line = a typical normal racing lap', `≈ ${D.normalLap.toFixed(1)} s, median of all ${D.normalLaps} normal laps`]
              : [`dashed line = a typical normal racing lap ≈ ${D.normalLap.toFixed(1)} s (median of all ${D.normalLaps} normal laps)`];
   if (D.normalLap !== null) s += `<line x1="${M.l}" x2="${M.l + 24}" y1="${keyY - 4}" y2="${keyY - 4}" stroke="${D.ink}" stroke-dasharray="5 4"/>`;
   keyText.forEach((line, i) => { s += `<text class="axis" x="${M.l + (D.normalLap === null ? 0 : 30)}" y="${keyY + 16 * i}" fill="${D.ink}" font-weight="700">${esc(line)}</text>`; });
@@ -461,7 +461,7 @@ function eventFrame() {   // Lap time, position and gap at each lap completion a
         s += `<line x1="${ox}" x2="${ox + pw}" y1="${ys(v)}" y2="${ys(v)}" stroke="${D.grid}"/><text class="axis" x="${ox - 6}" y="${ys(v) + 4}" fill="${D.ink}" text-anchor="end">${v}</text>`;
       if (ri === 2) { const xstep = niceStep(xhi - xlo);
         for (let v = Math.ceil(xlo / xstep) * xstep; v <= xhi; v += xstep) s += `<text class="axis" x="${xs(v)}" y="${bottom + 16}" fill="${D.ink}" text-anchor="middle">${v}</text>`;
-        s += `<text class="axis" x="${ox + pw / 2}" y="${bottom + 32}" fill="${D.ink}" text-anchor="middle" font-weight="700">Seconds since this VSC started (0 = the moment it started)</text>`; }
+        s += `<text class="axis" x="${ox + pw / 2}" y="${bottom + 32}" fill="${D.ink}" text-anchor="middle" font-weight="700">${clockTitle(W)}</text>`; }
       if (ri === 0 && D.normalLap !== null)
         s += `<line x1="${ox}" x2="${ox + pw}" y1="${ys(D.normalLap)}" y2="${ys(D.normalLap)}" stroke="${D.ink}" stroke-dasharray="5 4" opacity=".55"/>`;
       const drawn = [];
@@ -497,6 +497,7 @@ function eventFrame() {   // Lap time, position and gap at each lap completion a
   fitFrame(height);
 }
 
+const clockTitle = w => w < 640 ? 'Seconds since the VSC started' : 'Seconds since this VSC started (0 = the moment it started)';   // The long title runs past a phone-width panel.
 let currentTime = D.t0;
 function frame(t) {
   currentTime = t;
