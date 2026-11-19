@@ -106,7 +106,7 @@ class StoryAppTests(unittest.TestCase):
         no_overlap = 'No pit visits shown overlapped a recorded VSC period.'
         expectations = {
             'Ferrari': ('1 pit visit was on a lap marked with a VSC flag.',
-                        'Only 1 (HAM on lap 25) overlapped a recorded VSC period.'),
+                        'It (HAM on lap 25) overlapped a recorded VSC period.'),
             'Mercedes': ('2 pit visits were on laps marked with a VSC flag.', no_overlap,
                          'ended just 0.132 s before it began'),
             'Red Bull Racing': ('None of the pit visits shown were on VSC-flagged laps.', no_overlap),
@@ -118,6 +118,18 @@ class StoryAppTests(unittest.TestCase):
                 guide = next(h.proto.body for h in self.app.get('html') if 'f1-takeaway' in h.proto.body)
                 for phrase in phrases:
                     self.assertIn(phrase, guide)
+                if team == 'Ferrari':   # Its one flagged visit did overlap, so "only" would mislead.
+                    self.assertNotIn('Only 1', guide)
+
+    def test_pit_summary_line_agrees_in_number_for_each_team(self):
+        self.go_to(3)
+        expected = {'Ferrari': 'Of the 6 pit visits shown, 1 has a VSC flag on the entry or exit lap, and it overlaps a VSC',
+                    'Mercedes': 'Of the 4 pit visits shown, 2 have a VSC flag on the entry or exit lap, but none overlaps a VSC',
+                    'Red Bull Racing': 'None of the 4 pit visits shown has a VSC flag on the entry or exit lap.'}
+        for team, line in expected.items():
+            with self.subTest(team=team):
+                self.app.multiselect[0].set_value([team]).run()
+                self.assertTrue(any(m.value.startswith(line) for m in self.app.markdown), [m.value for m in self.app.markdown][:3])
 
     def test_every_slide_explains_itself_in_plain_english(self):
         for slide in range(6):
