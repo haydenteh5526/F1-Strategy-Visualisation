@@ -2,6 +2,8 @@
 
 A group data visualisation project for F1 fans, initially studying the 2026 Austrian Grand Prix at the Red Bull Ring. We compare both drivers from Red Bull Racing, Mercedes and Ferrari.
 
+[Open the live F1 Strategy Visualisation dashboard](https://f1-strategy-visualisation.streamlit.app/)
+
 ## Current status
 
 The audience brief, data audit, preparation pipeline and story prototype are available. We retain all 426 selected laps and mark 361 as eligible for normal-racing pace comparisons. Pit/VSC and pace/tyre exploration are merged. The dashboard offers whole-race pace context and matched race-window comparisons, with stint accounting alongside the tyre-age view. No audience feedback was recorded (#8 closed as not planned), so the guided story stands without feedback-driven changes.

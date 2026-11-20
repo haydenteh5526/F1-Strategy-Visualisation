@@ -97,7 +97,7 @@ def overview_slide() -> None:
              *([again] if again else []),
              'This only shows who used which tyre and when. It does not say who was faster.'])
     # Our own HTML built from the prepared data, so it is safe to run as an iframe.
-    st.iframe(replay.html(laps, 'timeline', mode, 52*laps.Driver.nunique()+80), height=52*laps.Driver.nunique()+90, alt=replay.ARIA['timeline'])
+    st.iframe(replay.html(laps, 'timeline', mode, 52*laps.Driver.nunique()+80), alt=replay.ARIA['timeline'])
     st.caption('Each bar is one stint, starting with its tyre: S (Soft), M (Medium) or H (Hard). '
                'Gaps between bars are pit stops, grey bands are Virtual Safety Car laps and the stripe shows the team. '
                'Stint length is observed use, not tyre wear.')
@@ -122,7 +122,7 @@ def pace_slide() -> None:
              'A small difference does not show who had the better strategy: fuel, traffic and conditions are not accounted for.'])
     st.write(f'Whole-race context: compares {len(pace)} normal racing laps across different compounds and tyre ages. '
              'Lap 1, pit-stop laps, VSC and yellow-flag laps, and deleted laps are left out.')
-    st.iframe(replay.html(laps, 'pace', mode, 56*laps.Driver.nunique()+80), height=56*laps.Driver.nunique()+90, alt=replay.ARIA['pace'])
+    st.iframe(replay.html(laps, 'pace', mode, 56*laps.Driver.nunique()+80), alt=replay.ARIA['pace'])
     st.caption("The bar covers the middle half of each driver's normal racing laps, the dot or triangle marks their typical lap "
                'and the count is the number of laps behind it. Lower times are faster; a shorter bar means more consistent pace, '
                'not a better strategy. Fuel load, traffic and conditions are not controlled.')
@@ -212,7 +212,7 @@ def tyre_slide() -> None:
     st.write('Tyre age counts laps on a set, not wear. Cars also get lighter as fuel burns, '
              'so slower or faster laps are not caused by tyres alone.')
     panel_rows = -(-laps.Driver.nunique()//2)
-    st.iframe(replay.html(laps, 'tyres', mode, 190*panel_rows+90), height=190*panel_rows+100, alt=replay.ARIA['tyres'])
+    st.iframe(replay.html(laps, 'tyres', mode, 190*panel_rows+90), alt=replay.ARIA['tyres'])
     st.caption('Each dot is one normal racing lap, coloured by tyre and labelled with its stint and lap count. '
                'Lines are not drawn across the laps that are left out. Sparse stints may not support a trend.')
     st.markdown('#### Recorded stints and eligible observations')
@@ -270,7 +270,7 @@ def pit_slide() -> None:
                    + ' a VSC in the recorded timestamps.')
     st.write(summary)
     n = laps.Driver.nunique()
-    st.iframe(replay.html(laps, 'pitclock', mode, 200+48*n), height=210+48*n, alt=replay.ARIA['pitclock'])
+    st.iframe(replay.html(laps, 'pitclock', mode, 200+48*n), alt=replay.ARIA['pitclock'])
     st.caption('Each bar is one pit-lane visit, from entering to leaving, placed on the recorded session clock against the phases of '
                'each VSC. A visit within 1 second of a VSC edge is called too close to call: that rule is a caution, not a measured '
                'accuracy. The bar is the whole trip through the pit lane, not the time the car stood still or the time lost.')
@@ -306,7 +306,7 @@ def event_slide() -> None:
     vsc = laps.loc[laps.HasVSC, 'LapNumber']
     st.write(f'VSC periods affected laps {lap_ranges(vsc)}. These laps are left out of pace comparisons but belong in the event '
              'explanation, so every non-pit affected lap is kept here.' if len(vsc) else 'No VSC laps for the selected teams.')
-    st.iframe(replay.html(laps, 'event', mode, 800), height=810, alt=replay.ARIA['event'])
+    st.iframe(replay.html(laps, 'event', mode, 800), alt=replay.ARIA['event'])
     st.caption('Each dot sits at the moment a car finished a lap, with nothing drawn between laps. The bottom row compares cars on the '
                'same lap: seconds behind the first car of the whole field to finish it, which is not a live gap, and that first car can '
                'differ from lap to lap. Changes across these windows include pit activity and other racing, so they do not isolate '
@@ -322,7 +322,7 @@ def positions_slide() -> None:
             ['Big drops in a line usually line up with a pit stop dot: the car loses places while it is in the pit lane.',
              'Positions are recorded at the end of each lap, so lines join those points.'])
     st.write('Extra context: where each driver ran lap by lap, with the pit stops marked.')
-    st.iframe(replay.html(laps, 'positions', mode, 420), height=430, alt=replay.ARIA['positions'])
+    st.iframe(replay.html(laps, 'positions', mode, 420), alt=replay.ARIA['positions'])
     st.caption('Positions are recorded at the end of each lap; the lines join those points and the cars only move along the lap '
                'axis. Dots mark the lap each driver entered the pits. Team-mates share a colour, one solid and one dashed.')
 
