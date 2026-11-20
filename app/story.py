@@ -221,7 +221,7 @@ def tyre_slide() -> None:
         'RecordedLaps': 'Recorded laps', 'EligibleLaps': 'Eligible laps',
         'FreshTyreAtStart': 'Fresh set at start', 'FirstRecordedTyreAge': 'Tyre age on first lap (laps)',
         'LastRecordedTyreAge': 'Tyre age on last lap (laps)', 'DescriptiveSecondsPerTyreLap': 'Change per tyre lap (s)'})
-    st.dataframe(context, hide_index=True, width='stretch',
+    st.dataframe(context, hide_index=True, width='stretch', height='content',
                  column_config={'Change per tyre lap (s)': st.column_config.NumberColumn(format='%.3f')})
     st.caption('Recorded laps count every lap in the stint; eligible laps count only the dots used for pace analysis. '
                'Used sets can start above age one. Stint number distinguishes consecutive sets of the same compound. '
